@@ -1,15 +1,33 @@
-# Serverless Plugin
+# serverless-frontend-plugin
+Package and deploy any frontend with your serverless backend.
 
-This plugin has been generated using the `plugin` template from the [Serverless Framework](https://www.serverless.com/).
+## Installation
+```bash
+npm install --save-dev serverless-frontend-plugin
+```
 
-## Implementing your plugin
+## Implementation
+* Include this plugin in the `plugins` section of your `severless.yml`.
+```YAML
+plugins:
+  - serverless-frontend-plugin
+```
 
-When developing your plugin, please refer to the following sources:
+* Add your frontend build commands and set the working directory by adding the following to the `custom` section of your `serverless.yml`:
+```YAML
+custom:
+  serverless-frontend-plugin:
+    distDir: frontend/dist
+    build:
+      cwdDir: frontend
+      command:
+        - npm
+        - run
+        - build
+```
 
-- [Plugins Documentation](https://www.serverless.com/framework/docs/providers/aws/guide/plugins/)
-- [Blog - How to create serverless plugins - Part 1](https://serverless.com/blog/writing-serverless-plugins/)
-- [Blog - How to create serverless plugins - Part 2](https://serverless.com/blog/writing-serverless-plugins-2/)
-
-## Sharing your plugin
-
-After implementing your plugin, you might consider sharing it with a wider audience. You might do it by adding it to `Community Contributed Plugins` in official [plugins repository](https://github.com/serverless/plugins).
+## Options
+* `distDir`: (<string>) The directory that gets uploaded and hosted as a static site.
+* `build`: (<Map>)
+  * `command`: (<string>[]) Command and options as an array of strings. For example, `["npm", "run", "build"]`
+  * `cwdDir`: (<string>) The directory from which to run the `build.command`
