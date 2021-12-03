@@ -10,9 +10,12 @@ function execCmd(cmd = '', cmdArgs = [], cwd = '.', logFunc = console.log) {
     proc.stdout.on('data', (stdout) => {
       logFunc(stdout.toString());
     });
-    proc.stderr.on('data', (err) => {
-      rej(err);
-    });
+
+    /* stderr is mistakenly picking up webpack stdout */
+    // proc.stderr.on('data', (err) => {
+    //   rej(err.toString());
+    // });
+
     proc.on('close', (code) => {
       if (code > 0) {
         rej(`command: ${cmd} exited with exit code ${code}`);
