@@ -27,7 +27,13 @@ custom:
 ```
 
 ## Options
-* `distDir`: (<string>) The directory that gets uploaded and hosted as a static site.
+* `distDir`: (<string>) The directory that gets uploaded and hosted as a static site. Defaults to `frontend/dist`.
 * `build`: (<Map>)
-  * `command`: (<string>[]) Command and options as an array of strings. For example, `["npm", "run", "build"]`
-  * `cwdDir`: (<string>) The directory from which to run the `build.command`
+  * `command`: (<string>[]) Command and options as an array of strings. Defaults to `["npm", "run", "build"]`.
+  * `cwdDir`: (<string>) The directory from which to run the `build.command`. Defaults to `./frontend`.
+* `stackName`: (<string>) Name of the CloudFormation stack for the frontend. Defaults to `<service-name>-<stage>-<region>`.
+* `bucket`: (<Map>)
+  * `name`: (<string>) Name of the S3 Bucket to upload the `distDir` to. Defaults to a generated name.
+  * `existing`: (<boolean>) Set to `true` if you want to use an existing S3 bucket instead of having the plugin create one for you.
+  * `indexDocument`: (<string>) Defaults to `index.html`.
+  * `errorDocument`: (<string>) Defaults to `index.html`.
