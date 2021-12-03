@@ -21,6 +21,7 @@ class ServerlessFrontendPlugin {
     this.hooks = {
       'before:package:finalize': this.buildClient.bind(this),
       'before:deploy:deploy': this.deployClient.bind(this),
+      'before:remove:remove': this.deleteClient.bind(this),
     };
   }
 
@@ -45,6 +46,19 @@ class ServerlessFrontendPlugin {
     this.serverless.cli.log('Done.');
   }
 
+
+  async bucketExists() {
+    const bucketName = this.getBucketName();
+    const s3Client = this.getS3Client();
+
+    try {
+      await s3Client.headBucket({ Bucket: bucketName }).promise();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async deployClient() {
     const frontendConfig = this.getConfig();
     const {
@@ -53,7 +67,6 @@ class ServerlessFrontendPlugin {
     } = frontendConfig;
 
     const {
-      name = `${this.serverless.service.service}`,
       existing = false,
       indexDocument = 'index.html',
       errorDocument = 'index.html',
@@ -61,6 +74,7 @@ class ServerlessFrontendPlugin {
 
     const stackName = this.getStackName();
     const cfClient = this.getCloudFormationClient();
+    const bucketName = this.getBucketName();
 
     const stackExists = await this.stackExists();
     const cfParams = {
@@ -77,31 +91,90 @@ class ServerlessFrontendPlugin {
         },
         {
           ParameterKey: 'BucketName',
-          ParameterValue: name,
+          ParameterValue: bucketName,
+        },
+        {
+          ParameterKey: 'IndexDocument',
+          ParameterValue: indexDocument,
+        },
+        {
+          ParameterKey: 'ErrorDocument',
+          ParameterValue: errorDocument,
         },
       ],
     };
 
-    if (!stackExists) {
-      await cfClient.createStack(cfParams).promise();
-    } else {
-      await cfClient.updateStack(cfParams).promise();
+    if (!existing) {
+      if (!stackExists) {
+        await cfClient.createStack(cfParams).promise();
+      } else {
+        await cfClient.updateStack(cfParams).promise()
+          .catch((e) => {
+            if (e.message.match(/No updates are to be performed/)) {
+              return Promise.resolve();
+            }
+            throw e;
+          });
+      }
+  
+      await this.waitForStackComplete();
     }
-
-    await this.waitForStackComplete();
 
     const frontendFiles = await readDir(distDir);
     const s3Client = this.getS3Client();
+
     await Promise.all(frontendFiles.map(file => {
       this.serverless.cli.log(`Uploading ${file} to ${name}`);
+      const filePathArr = file.split('/');
+      const key = filePathArr[filePathArr.length - 1];
+
       return s3Client.putObject({
-        Bucket: name,
-        Key: file,
+        Bucket: bucketName,
+        Key: key,
         Body: readFileSync(file),
       }).promise()
     }));
 
     this.serverless.cli.log(`frontend stack name: ${stackName} finished deploying.`);
+    const outputs = await this.getStackOutputs();
+    this.serverless.cli.log(JSON.stringify(outputs, undefined, 2));
+  }
+
+  async deleteClient() {
+    const bucketExists = await this.bucketExists();
+
+    if (bucketExists) {
+      const bucketName = this.getBucketName();
+      const s3Client = this.getS3Client();
+      this.serverless.cli.log(`Removing objects from ${bucketName}...`);
+      await s3Client.putBucketLifecycleConfiguration({
+        Bucket: bucketName,
+        LifecycleConfiguration: {
+          Rules: [
+            {
+              Status: 'Enabled',
+              Expiration: {
+                Days: 0,
+              },
+            },
+          ],
+        },
+      }).promise();
+    }
+
+    const stackName = this.getStackName();
+    const stackExists = await this.stackExists();
+    if (stackExists) {
+      this.serverless.cli.log(`Initiating deleteStack() for ${stackName}`);
+      await this.cfClient.deleteStack({
+        StackName: stackName,
+      }).promise();
+    }
+  }
+
+  getBucketName() {
+    const { bucket = {} } = this.getConfig();
+    return bucket.name || `${this.serverless.service.service}-${this.serverless.service.stage}-${this.getRegion()}`;
   }
 
   getConfig() {
@@ -130,7 +203,15 @@ class ServerlessFrontendPlugin {
 
   getStackName() {
     return this.serverless.service.provider.stackName 
-      || `${this.serverless.service.service}-${this.serverless.service.provider.stage}-${this.getRegion()}`;
+      || `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
+  }
+
+  async getStackOutputs() {
+    const stackName = this.getStackName();
+    const cfClient = this.getCloudFormationClient();
+    const { Stacks: stacks } = await cfClient.describeStacks({ StackName: stackName }).promise();
+    const { Outputs: outputs } = stacks.pop();
+    return outputs;
   }
 
   async stackExists() {
@@ -150,11 +231,11 @@ class ServerlessFrontendPlugin {
     const stackName = this.getStackName();
     const cfClient = this.getCloudFormationClient();
     const { Stacks: stacks } = await cfClient.describeStacks({ StackName: stackName }).promise();
-    const { StackStatus: status } = stacks.pop();
+    const { StackStatus: status, StackStatusReason: message } = stacks.pop();
     this.serverless.cli.log(`${stackName} status: ${status}`);
 
     if (status.match(/(FAILED|ROLLBACK)/)) {
-      throw new Error(`serverless-frontend-plugin stack: ${stackName} failed with a status of ${status}`);
+      throw new Error(`serverless-frontend-plugin stack: ${stackName} failed with a status of ${status} due to: ${message}`);
     }
 
     if (status.match(/(COMPLETE)/)) {

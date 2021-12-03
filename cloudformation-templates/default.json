@@ -1,6 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Frontend stack for a serverless application",
+
   "Parameters": {
     "Stage": {
       "Type": "String"
@@ -10,8 +11,15 @@
     },
     "BucketName": {
       "Type": "String"
+    },
+    "IndexDocument": {
+      "Type": "String"
+    },
+    "ErrorDocument": {
+      "Type": "String"
     }
   },
+
   "Resources": {
     "FrontendBucket": {
       "Type": "AWS::S3::Bucket",
@@ -19,9 +27,29 @@
         "BucketName": {
           "Ref": "BucketName"
         },
+        "AccessControl": "PublicRead",
         "WebsiteConfiguration": {
-
+          "IndexDocument": {
+            "Ref": "IndexDocument"
+          },
+          "ErrorDocument": {
+            "Ref": "ErrorDocument"
+          }
+        },
+        "VersioningConfiguration": {
+          "Status": "Suspended"
         }
+      }
+    }
+  },
+
+  "Outputs": {
+    "S3WebsiteUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "FrontendBucket",
+          "WebsiteURL"
+        ]
       }
     }
   }

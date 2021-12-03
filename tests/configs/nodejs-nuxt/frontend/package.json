@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt",
-    "build": "nuxt build",
+    "build": "nuxt build --spa && npm run generate",
     "start": "nuxt start",
     "generate": "nuxt generate"
   },
