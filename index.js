@@ -46,7 +46,11 @@ class ServerlessFrontendPlugin {
       command = ['npm', 'run', 'build'],
     } = build;
 
-    await execCmd(command.splice(0, 1), command, cwdDir, this.serverless.cli.log);
+    const cmd = command[0];
+    const options = command.splice(1, command.length -1);
+    this.serverless.cli.log(`Building frontend using: ${cmd} ${options.join(' ')}`);
+
+    await execCmd(cmd, options, cwdDir, this.serverless.cli.log);
 
     this.serverless.cli.log('Done.');
   }
