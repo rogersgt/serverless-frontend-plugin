@@ -46,9 +46,6 @@
         "Bucket": {
           "Ref": "FrontendBucket"
         },
-        "VersioningConfiguration": {
-          "Status": "Disabled"
-        },
         "PolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
