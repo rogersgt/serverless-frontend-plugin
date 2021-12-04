@@ -34,16 +34,13 @@ class ServerlessFrontendPlugin {
 
     const {
       cwdDir = 'client',
-      command = ['npm', 'run', 'build'],
+      command = ['echo', 'no', 'command'],
     } = build;
 
     const cmd = command[0];
     const options = command.splice(1, command.length -1);
-    this.serverless.cli.log(`Building frontend using: ${cmd} ${options.join(' ')}`);
 
     await execCmd(cmd, options, cwdDir, this.serverless.cli.log);
-
-    this.serverless.cli.log('Done.');
   }
 
 
@@ -124,14 +121,17 @@ class ServerlessFrontendPlugin {
     const s3Client = this.getS3Client();
 
     await Promise.all(frontendFiles.map(file => {
-      this.serverless.cli.log(`Uploading ${file} to ${name}`);
       const filePathArr = file.split('/');
       const key = filePathArr[filePathArr.length - 1];
+      this.serverless.cli.log(`Uploading ${file} to ${bucketName}/${key}`);
 
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
         Body: readFileSync(file),
+        ContentDisposition: 'text/html',
+        /* If index.html, set cache for 5 minutes; else 24 hours */
+        CacheControl: `max-age=${key === 'index.html' ? 300 : 86400}`,
       }).promise()
     }));
 
@@ -147,19 +147,28 @@ class ServerlessFrontendPlugin {
       const bucketName = this.getBucketName();
       const s3Client = this.getS3Client();
       this.serverless.cli.log(`Removing objects from ${bucketName}...`);
-      await s3Client.putBucketLifecycleConfiguration({
-        Bucket: bucketName,
-        LifecycleConfiguration: {
-          Rules: [
-            {
-              Status: 'Enabled',
-              Expiration: {
-                Days: 0,
-              },
-            },
-          ],
-        },
-      }).promise();
+
+      let existingItems = true;
+      let nextMarker;
+
+      while(existingItems) {
+        const {
+          IsTruncated,
+          Contents,
+          Marker,
+        } = await s3Client.listObjects({
+          Bucket: bucketName,
+          ...nextMarker && { Marker: nextMarker },
+        }).promise();
+
+        await Promise.all(Contents.map((item) => {
+          const { Key } = item;
+          return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
+        }));
+
+        nextMarker = Marker;
+        existingItems = !IsTruncated && !!Marker;
+      }
     }
 
     const stackName = this.getStackName();
@@ -174,7 +183,8 @@ class ServerlessFrontendPlugin {
 
   getBucketName() {
     const { bucket = {} } = this.getConfig();
-    return bucket.name || `${this.serverless.service.service}-${this.serverless.service.stage}-${this.getRegion()}`;
+    const stage = this.serverless.service.stage;
+    return bucket.name || `${this.serverless.service.service}${!!stage ? `-${stage}` : ''}-${this.getRegion()}`;
   }
 
   getConfig() {

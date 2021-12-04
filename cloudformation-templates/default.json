@@ -27,7 +27,6 @@
         "BucketName": {
           "Ref": "BucketName"
         },
-        "AccessControl": "PublicRead",
         "WebsiteConfiguration": {
           "IndexDocument": {
             "Ref": "IndexDocument"
@@ -38,6 +37,30 @@
         },
         "VersioningConfiguration": {
           "Status": "Suspended"
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "FrontendBucket"
+        },
+        "VersioningConfiguration": {
+          "Status": "Disabled"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Principal": "*",
+              "Effect": "Allow",
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::${FrontendBucket}/*"
+              }
+            }
+          ]
         }
       }
     }

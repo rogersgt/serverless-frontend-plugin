@@ -174,7 +174,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/nodejs-html/dev/1638495957633-2021-12-03T01:45:57.633Z/nodejs-html.zip"
+                "S3Key": "serverless/nodejs-html/dev/1638659957137-2021-12-04T23:19:17.137Z/nodejs-html.zip"
               },
               "Handler": "handler.hello",
               "Runtime": "nodejs12.x",
@@ -360,7 +360,7 @@
     "artifact": "/home/grady/projects/serverless-frontend-plugin/tests/configs/nodejs-html/.serverless/nodejs-html.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/nodejs-html/dev/1638495957633-2021-12-03T01:45:57.633Z",
+    "artifactDirectoryName": "serverless/nodejs-html/dev/1638659957137-2021-12-04T23:19:17.137Z",
     "artifact": "nodejs-html.zip"
   }
 }

@@ -29,7 +29,7 @@ custom:
 ## Options
 * `distDir`: (<string>) The directory that gets uploaded and hosted as a static site. Defaults to `frontend/dist`.
 * `build`: (<Map>)
-  * `command`: (<string>[]) Command and options as an array of strings. Defaults to `["npm", "run", "build"]`.
+  * `command`: (<string>[]) Command and options as an array of strings. For example, `["npm", "run", "build"]` Defaults to `["echo", "no", "command"]`.
   * `cwdDir`: (<string>) The directory from which to run the `build.command`. Defaults to `./frontend`.
 * `stackName`: (<string>) Name of the CloudFormation stack for the frontend. Defaults to `<service-name>-<stage>-<region>`.
 * `bucket`: (<Map>)
