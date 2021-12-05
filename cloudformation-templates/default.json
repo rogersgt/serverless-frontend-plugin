@@ -67,11 +67,29 @@
     "FrontendBucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
+        "AccessControl": "PublicRead",
         "BucketName": {
           "Ref": "BucketName"
         },
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": ["Authorization"],
+              "AllowedMethods": ["GET"],
+              "AllowedOrigins": ["*"]
+            }
+          ]
+        },
         "VersioningConfiguration": {
           "Status": "Suspended"
+        },
+        "WebsiteConfiguration": {
+          "IndexDocument": {
+            "Ref": "IndexDocument"
+          },
+          "ErrorDocument": {
+            "Ref": "ErrorDocument"
+          }
         }
       }
     },
@@ -124,6 +142,7 @@
             "CustomErrorResponses": [
               {
                 "ErrorCode": 404,
+                "ErrorCachingMinTTL": 0,
                 "ResponseCode": {
                   "Fn::If": [
                     "ErrorDocEqualsIndex",
@@ -139,7 +158,7 @@
               {
                 "Id": { "Ref": "FrontendBucket" },
                 "DomainName": {
-                  "Fn::Sub": "${FrontendBucket}.s3.${AWS::Region}.amazonaws.com"
+                  "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
                 },
                 "S3OriginConfig": {
                   "OriginAccessIdentity": ""
@@ -147,11 +166,26 @@
               }
             ],
             "DefaultCacheBehavior": {
+              "AllowedMethods": [
+                "GET",
+                "HEAD"
+              ],
+              "CachedMethods": [
+                "GET",
+                "HEAD"
+              ],
               "TargetOriginId": { "Ref": "FrontendBucket" },
               "ViewerProtocolPolicy": "redirect-to-https",
               "ForwardedValues": {
-                "QueryString": true
-              }
+                "QueryString": false,
+                "Cookies": {
+                  "Forward": "none"
+                }
+              },
+              "MaxTTL": 31536000,
+              "MinTTL": 0,
+              "DefaultTTL": 86400,
+              "Compress": true
             }
           },
           "Tags" : [
@@ -222,15 +256,20 @@
   },
 
   "Outputs": {
-    "FrontendUrl": {
+    "FrontendUrls": {
       "Value": {
-        "Fn::Sub": [
-          "https://${url}",
+        "Fn::If": [
+          "CreateAltDnsName",
           {
-            "url": {
-              "Fn::GetAtt": ["Distribution", "DomainName"]
-            }
-          }
+            "Fn::Join": [
+              ",",
+              [
+                { "Fn::Sub": "https://${DnsName}" },
+                { "Fn::Sub": "https://${AltDnsName}" }
+              ]
+            ]
+          },
+          { "Fn::Sub": "https://${DnsName}" }
         ]
       }
     }

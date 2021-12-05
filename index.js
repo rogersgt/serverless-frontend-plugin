@@ -1,6 +1,7 @@
 'use strict';
 const readDir = require('recursive-readdir');
-const { readFileSync, fstat } = require('fs');
+const { readFileSync } = require('fs');
+const serverless = require('serverless');
 const { CloudFormation, S3 } = require('aws-sdk');
 const mimeTypes = require('mime-types');
 const {
@@ -12,6 +13,10 @@ const defaultTemplate = require('./cloudformation-templates/default.json');
 class ServerlessFrontendPlugin {
   name = 'serverless-frontend-plugin';
 
+  /**
+   * 
+   * @param {serverless} serverless Serverless Instance
+   */
   constructor(serverless) {
     this.serverless = serverless;
 
@@ -43,7 +48,6 @@ class ServerlessFrontendPlugin {
 
     await execCmd(cmd, options, cwdDir, this.serverless.cli.log);
   }
-
 
   async bucketExists() {
     const bucketName = this.getBucketName();
@@ -157,7 +161,7 @@ class ServerlessFrontendPlugin {
         Bucket: bucketName,
         Key: key,
         Body: readFileSync(file),
-        ...contentType && { ContentType: contentType },
+        ...(contentType) && { ContentType: contentType },
         ContentDisposition: 'inline',
         /* If index.html, set cache for 5 minutes; else 24 hours */
         CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
@@ -168,7 +172,22 @@ class ServerlessFrontendPlugin {
 
     this.serverless.cli.log(`frontend stack name: ${stackName} finished deploying.`);
     const outputs = await this.getStackOutputs();
-    this.serverless.cli.log(JSON.stringify(outputs, undefined, 2));
+    const formattedOutputsObj = outputs.reduce((prev, output) => {
+      const {
+        OutputKey: key,
+        OutputValue: val,
+      } = output;
+      prev[key] = val;
+      return prev;
+    }, {});
+
+    const frontendUrlsArray = formattedOutputsObj.FrontendUrls.split(',');
+    /* This line doesn't seem to be working.. so the extra log on the next line is a workaround */
+    this.serverless.addServiceOutputSection('frontend url', frontendUrlsArray);
+    this.serverless.cli.log(`
+      -------- Serverless Frontend Plugin -------
+      URLs: ${JSON.stringify(frontendUrlsArray)}
+    `);
   }
 
   async deleteClient() {
@@ -194,7 +213,7 @@ class ServerlessFrontendPlugin {
 
         await Promise.all(Contents.map((item) => {
           const { Key } = item;
-          this.serverless.cli.log(`Deleting ${key}`)
+          this.serverless.cli.log(`Deleting ${Key}`)
           return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
         }));
 
@@ -264,7 +283,6 @@ class ServerlessFrontendPlugin {
       }).promise();
       return true;
     } catch (error) {
-      // this.serverless.cli.log(error.message);
       return false;
     }
   }
