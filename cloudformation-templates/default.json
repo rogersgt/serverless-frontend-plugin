@@ -131,13 +131,13 @@
                     404
                   ]
                 },
-                "ResponsePagePath": { "Ref": "ErrorDocument" }
+                "ResponsePagePath": { "Fn::Sub": "/${ErrorDocument}" }
               }
             ],
             "Enabled": true,
             "Origins": [
               {
-                "Id": "frontend-s3-origin",
+                "Id": { "Ref": "FrontendBucket" },
                 "DomainName": {
                   "Fn::Sub": "${FrontendBucket}.s3.${AWS::Region}.amazonaws.com"
                 },
@@ -145,7 +145,14 @@
                   "OriginAccessIdentity": ""
                 }
               }
-            ]
+            ],
+            "DefaultCacheBehavior": {
+              "TargetOriginId": { "Ref": "FrontendBucket" },
+              "ViewerProtocolPolicy": "redirect-to-https",
+              "ForwardedValues": {
+                "QueryString": true
+              }
+            }
           },
           "Tags" : [
             {
@@ -187,7 +194,8 @@
             "Fn::GetAtt": ["Distribution", "DomainName"]
           }
         },
-        "Name": { "Ref": "DnsName" }
+        "Name": { "Ref": "DnsName" },
+        "type": "A"
       }
     },
     "R53Record2": {
@@ -207,7 +215,8 @@
             "EvaluateTargetHealth": false
           }
         },
-        "Name": { "Ref": "AltDnsName" }
+        "Name": { "Ref": "AltDnsName" },
+        "Type": "CNAME"
       }
     }
   },

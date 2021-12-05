@@ -71,6 +71,10 @@ custom:
         - npm
         - run
         - build
+    distribution:
+      acmCertificateArn: ${opt:cert-arn}
+      dnsName: ${opt:domain}
+      hostedZoneName: ${opt:hosted-zone}
 
 functions:
   hello:
