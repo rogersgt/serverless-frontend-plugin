@@ -195,7 +195,7 @@
           }
         },
         "Name": { "Ref": "DnsName" },
-        "type": "A"
+        "Type": "A"
       }
     },
     "R53Record2": {
