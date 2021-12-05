@@ -37,3 +37,6 @@ custom:
   * `existing`: (<boolean>) Set to `true` if you want to use an existing S3 bucket instead of having the plugin create one for you.
   * `indexDocument`: (<string>) Defaults to `index.html`.
   * `errorDocument`: (<string>) Defaults to `index.html`.
+* `distribution`: (<Map>)
+  * `aliases`: (<string>[] *Required*) Array of DNS names to use for this Cloudfront distribution. This is required and has no default values.
+  * `acmCertificateArn`: (<string>, *Required*) AWS ACM Certificate Arn that covers the domain names listed in `aliases`.

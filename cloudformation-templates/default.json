@@ -60,7 +60,23 @@
           ]
         }
       }
-    }
+    },
+    "Distribution": {
+      "Type" : "AWS::CloudFront::Distribution",
+      "Properties" : {
+          "DistributionConfig" : {
+            
+          },
+          "Tags" : [
+            {
+              "Key": "Name",
+              "Value": {
+                "Ref": "ServiceName"
+              }
+            }
+          ]
+        }
+    }    
   },
 
   "Outputs": {

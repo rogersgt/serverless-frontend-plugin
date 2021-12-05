@@ -2,6 +2,7 @@
 const readDir = require('recursive-readdir');
 const { readFileSync, fstat } = require('fs');
 const { CloudFormation, S3 } = require('aws-sdk');
+const mimeTypes = require('mime-types');
 const {
   execCmd,
 } = require('./lib/child_process');
@@ -125,14 +126,20 @@ class ServerlessFrontendPlugin {
       const key = filePathArr[filePathArr.length - 1];
       this.serverless.cli.log(`Uploading ${file} to ${bucketName}/${key}`);
 
+      const isIndexhtml = key === 'index.html';
+      const contentType = mimeTypes.lookup(key);
+
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
         Body: readFileSync(file),
-        ContentDisposition: 'text/html',
+        ...contentType && { ContentType: contentType },
+        ContentDisposition: 'inline',
         /* If index.html, set cache for 5 minutes; else 24 hours */
-        CacheControl: `max-age=${key === 'index.html' ? 300 : 86400}`,
-      }).promise()
+        CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
+        ACL: 'public-read',
+        StorageClass: 'STANDARD',
+      }).promise();
     }));
 
     this.serverless.cli.log(`frontend stack name: ${stackName} finished deploying.`);
@@ -163,6 +170,7 @@ class ServerlessFrontendPlugin {
 
         await Promise.all(Contents.map((item) => {
           const { Key } = item;
+          this.serverless.cli.log(`Deleting ${key}`)
           return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
         }));
 
