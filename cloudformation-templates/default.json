@@ -3,8 +3,15 @@
   "Description": "Frontend stack for a serverless application",
 
   "Parameters": {
-    "Stage": {
+    "AcmCertificateArn": {
       "Type": "String"
+    },
+    "Aliases": {
+      "Type": "CommaDelimitedList"
+    },
+    "Stage": {
+      "Type": "String",
+      "Default": ""
     },
     "ServiceName": {
       "Type": "String"
@@ -17,6 +24,19 @@
     },
     "ErrorDocument": {
       "Type": "String"
+    }
+  },
+
+  "Conditions": {
+    "UseStage": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            { "Ref": "Stage" },
+            ""
+          ]
+        }
+      ]
     }
   },
 
@@ -65,13 +85,33 @@
       "Type" : "AWS::CloudFront::Distribution",
       "Properties" : {
           "DistributionConfig" : {
-            
+            "Aliases": {
+              "Ref": "Aliases"
+            },
+            "AcmCertificateArn": {
+              "Ref": "AcmCertificateArn"
+            },
+            "DefaultRootObject": {
+              "Ref": "IndexDocument"
+            },
+            "Origins": [
+              {
+                "Id": "frontend-s3-origin",
+                "DomainName": {
+                  "Fn::Sub": "${FrontendBucket}.s3.${AWS::Region}.amazonaws.com"
+                }
+              }
+            ]
           },
           "Tags" : [
             {
               "Key": "Name",
               "Value": {
-                "Ref": "ServiceName"
+                "Fn::If": [
+                  "UseSage",
+                  { "Fn::Sub": "${ServiceName}-${Stage}" },
+                  { "Ref": "ServiceName" }
+                ]
               }
             }
           ]
@@ -80,11 +120,15 @@
   },
 
   "Outputs": {
-    "S3WebsiteUrl": {
+    "FrontendUrl": {
       "Value": {
-        "Fn::GetAtt": [
-          "FrontendBucket",
-          "WebsiteURL"
+        "Fn::Sub": [
+          "https://${url}",
+          {
+            "url": {
+              "Fn::GetAtt": ["Distribution", "DomainName"]
+            }
+          }
         ]
       }
     }
