@@ -211,11 +211,17 @@ class ServerlessFrontendPlugin {
           ...nextMarker && { Marker: nextMarker },
         }).promise();
 
-        await Promise.all(Contents.map((item) => {
-          const { Key } = item;
-          this.serverless.cli.log(`Deleting ${Key}`)
-          return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
-        }));
+        // await Promise.all(Contents.map((item) => {
+        //   const { Key } = item;
+        //   this.serverless.cli.log(`Deleting ${Key}`)
+        //   return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
+        // }));
+        await s3Client.deleteObjects({
+          Bucket: bucketName,
+          Delete: {
+            Objects: Contents.map(({ Key }) => ({ Key })),
+          },
+        }).promise();
 
         nextMarker = Marker;
         existingItems = !IsTruncated && !!Marker;
