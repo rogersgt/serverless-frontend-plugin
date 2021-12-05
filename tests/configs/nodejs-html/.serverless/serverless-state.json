@@ -174,7 +174,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/nodejs-html/dev/1638659957137-2021-12-04T23:19:17.137Z/nodejs-html.zip"
+                "S3Key": "serverless/nodejs-html/dev/1638674478343-2021-12-05T03:21:18.343Z/nodejs-html.zip"
               },
               "Handler": "handler.hello",
               "Runtime": "nodejs12.x",
@@ -315,6 +315,11 @@
           "command": [
             "echo"
           ]
+        },
+        "distribution": {
+          "acmCertificateArn": "arn:aws:acm:us-east-1:230741442635:certificate/f37bcfc2-5a6d-43ed-9010-20ec7353f404",
+          "dnsName": "nodejs-html.whitebot.net",
+          "hostedZoneName": "whitebot.net"
         }
       }
     },
@@ -360,7 +365,7 @@
     "artifact": "/home/grady/projects/serverless-frontend-plugin/tests/configs/nodejs-html/.serverless/nodejs-html.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/nodejs-html/dev/1638659957137-2021-12-04T23:19:17.137Z",
+    "artifactDirectoryName": "serverless/nodejs-html/dev/1638674478343-2021-12-05T03:21:18.343Z",
     "artifact": "nodejs-html.zip"
   }
 }

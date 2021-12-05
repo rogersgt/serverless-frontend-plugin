@@ -24,6 +24,11 @@ custom:
         - npm
         - run
         - build
+    distribution:
+      acmCertificateArn: <your certificate arn>
+      dnsName: <your-domain.com> # Route53 record value
+      altDnsName: <another.your-domain.com> # Route53 record value
+      hostedZoneName: <your-domain.com> # Route53 Hosted Zone Name
 ```
 
 ## Options
@@ -38,5 +43,7 @@ custom:
   * `indexDocument`: (<string>) Defaults to `index.html`.
   * `errorDocument`: (<string>) Defaults to `index.html`.
 * `distribution`: (<Map>)
-  * `aliases`: (<string>[] *Required*) Array of DNS names to use for this Cloudfront distribution. This is required and has no default values.
+  * `dnsName`: (<string> *Required*) A DNS name to use for this Cloudfront distribution. This is required and has no default values.
+  * `altDnsName`: (<string>) Another DNS name to use for this Cloudfront distribution.
   * `acmCertificateArn`: (<string>, *Required*) AWS ACM Certificate Arn that covers the domain names listed in `aliases`.
+  * `hostedZoneName`: (<string>) Name of the AWS Route53 Hosted Zone to create the Route53 records. Defaults to the value of `dnsName`.

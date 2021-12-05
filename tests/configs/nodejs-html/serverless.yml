@@ -71,6 +71,10 @@ custom:
         - echo
         - 'no'
         - 'command'
+    distribution:
+      acmCertificateArn: ${opt:cert-arn}
+      dnsName: ${opt:domain}
+      hostedZoneName: ${opt:hosted-zone}
 
 
 functions:

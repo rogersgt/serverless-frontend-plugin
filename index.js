@@ -62,6 +62,7 @@ class ServerlessFrontendPlugin {
     const {
       distDir = 'frontend/dist',
       bucket = {},
+      distribution = {},
     } = frontendConfig;
 
     const {
@@ -69,6 +70,13 @@ class ServerlessFrontendPlugin {
       indexDocument = 'index.html',
       errorDocument = 'index.html',
     } = bucket;
+
+    const {
+      acmCertificateArn,
+      dnsName,
+      altDnsName = '',
+      hostedZoneName,
+    } = distribution;
 
     const stackName = this.getStackName();
     const cfClient = this.getCloudFormationClient();
@@ -98,6 +106,22 @@ class ServerlessFrontendPlugin {
         {
           ParameterKey: 'ErrorDocument',
           ParameterValue: errorDocument,
+        },
+        {
+          ParameterKey: 'DnsName',
+          ParameterValue: dnsName,
+        },
+        {
+          ParameterKey: 'AltDnsName',
+          ParameterValue: altDnsName,
+        },
+        {
+          ParameterKey: 'AcmCertificateArn',
+          ParameterValue: acmCertificateArn,
+        },
+        {
+          ParameterKey: 'HostedZoneName',
+          ParameterValue: hostedZoneName || dnsName,
         },
       ],
     };
