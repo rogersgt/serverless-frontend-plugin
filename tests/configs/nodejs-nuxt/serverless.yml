@@ -19,6 +19,7 @@ service: nodejs-nuxt
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 frameworkVersion: '2'
+useDotenv: true
 
 provider:
   name: aws
@@ -72,9 +73,9 @@ custom:
         - run
         - build
     distribution:
-      acmCertificateArn: ${opt:cert-arn}
-      dnsName: ${opt:domain}
-      hostedZoneName: ${opt:hosted-zone}
+      acmCertificateArn: ${env:CERTIFICATE_ARN}
+      dnsName: ${env:DOMAIN_NAME}
+      hostedZoneName: ${env:HOSTED_ZONE_NAME}
 
 functions:
   hello:
