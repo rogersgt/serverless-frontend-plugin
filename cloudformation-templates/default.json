@@ -67,15 +67,20 @@
     "FrontendBucket": {
       "Type": "AWS::S3::Bucket",
       "Properties": {
-        "AccessControl": "PublicRead",
         "BucketName": {
           "Ref": "BucketName"
         },
         "CorsConfiguration": {
           "CorsRules": [
             {
-              "AllowedHeaders": ["Authorization"],
-              "AllowedMethods": ["GET"],
+              "AllowedHeaders": [
+                "Authorization",
+                "Content-Type",
+                "Origin",
+                "Content-Disposition",
+                "X-Forwarded-For"
+              ],
+              "AllowedMethods": ["GET", "HEAD"],
               "AllowedOrigins": ["*"]
             }
           ]
@@ -158,17 +163,18 @@
               {
                 "Id": { "Ref": "FrontendBucket" },
                 "DomainName": {
-                  "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
+                  "Fn::Sub": "${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com"
                 },
-                "S3OriginConfig": {
-                  "OriginAccessIdentity": ""
+                "CustomOriginConfig": {
+                  "OriginProtocolPolicy": "http-only"
                 }
               }
             ],
             "DefaultCacheBehavior": {
               "AllowedMethods": [
                 "GET",
-                "HEAD"
+                "HEAD",
+                "OPTIONS"
               ],
               "CachedMethods": [
                 "GET",
