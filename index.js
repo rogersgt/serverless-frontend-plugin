@@ -8,7 +8,7 @@ const {
   execCmd,
 } = require('./lib/child_process');
 
-const templates = require('./cloudformation-templates');
+const templates = require('./templates');
 
 class ServerlessFrontendPlugin {
   name = 'serverless-frontend-plugin';
@@ -156,18 +156,18 @@ class ServerlessFrontendPlugin {
       this.serverless.cli.log(`Uploading ${file} to ${bucketName}/${key}`);
 
       const isIndexhtml = key === 'index.html';
-      const contentType = mimeTypes.lookup(key);
+      // const contentType = mimeTypes.lookup(key);
 
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
-        Body: readFileSync(file),
-        ...(contentType) && { ContentType: contentType },
+        Body: readFileSync(file).toString('binary'),
+        // ...(contentType) && { ContentType: contentType },
         // ContentDisposition: 'inline',
         /* If index.html, set cache for 5 minutes; else 24 hours */
         CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
         // ACL: 'public-read',
-        StorageClass: 'STANDARD',
+        // StorageClass: 'STANDARD',
       }).promise();
     }));
 
@@ -212,11 +212,6 @@ class ServerlessFrontendPlugin {
           ...nextMarker && { Marker: nextMarker },
         }).promise();
 
-        // await Promise.all(Contents.map((item) => {
-        //   const { Key } = item;
-        //   this.serverless.cli.log(`Deleting ${Key}`)
-        //   return s3Client.deleteObject({ Bucket: bucketName, Key }).promise();
-        // }));
         await s3Client.deleteObjects({
           Bucket: bucketName,
           Delete: {

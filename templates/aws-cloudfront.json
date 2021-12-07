@@ -73,13 +73,7 @@
         "CorsConfiguration": {
           "CorsRules": [
             {
-              "AllowedHeaders": [
-                "Authorization",
-                "Content-Type",
-                "Origin",
-                "Content-Disposition",
-                "X-Forwarded-For"
-              ],
+              "AllowedHeaders": ["*"],
               "AllowedMethods": ["GET", "HEAD"],
               "AllowedOrigins": ["*"]
             }
@@ -176,10 +170,10 @@
                 "Fn::Sub": "${AWS::StackName}"
               },
               "ForwardedValues" : {
-                "QueryString" : "false",
+                "QueryString" : false,
                 "Cookies" : { "Forward" : "none" }
               },
-              "ViewerProtocolPolicy" : "allow-all"
+              "ViewerProtocolPolicy" : "redirect-to-https"
             }
           },
           "Tags" : [
