@@ -3,7 +3,6 @@ const readDir = require('recursive-readdir');
 const { readFileSync } = require('fs');
 const serverless = require('serverless');
 const { CloudFormation, S3 } = require('aws-sdk');
-const mimeTypes = require('mime-types');
 const {
   execCmd,
 } = require('./lib/child_process');
@@ -41,12 +40,12 @@ class ServerlessFrontendPlugin {
     const {
       cwdDir = 'client',
       command = ['echo', 'no', 'command'],
+      env = {},
     } = build;
 
     const cmd = command[0];
     const options = command.splice(1, command.length -1);
-
-    await execCmd(cmd, options, cwdDir, this.serverless.cli.log);
+    await execCmd(cmd, options, cwdDir, env, this.serverless.cli.log);
   }
 
   async bucketExists() {
@@ -156,18 +155,12 @@ class ServerlessFrontendPlugin {
       this.serverless.cli.log(`Uploading ${file} to ${bucketName}/${key}`);
 
       const isIndexhtml = key === 'index.html';
-      // const contentType = mimeTypes.lookup(key);
 
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
         Body: readFileSync(file).toString('binary'),
-        // ...(contentType) && { ContentType: contentType },
-        // ContentDisposition: 'inline',
-        /* If index.html, set cache for 5 minutes; else 24 hours */
         CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
-        // ACL: 'public-read',
-        // StorageClass: 'STANDARD',
       }).promise();
     }));
 

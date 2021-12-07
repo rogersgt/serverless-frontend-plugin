@@ -72,6 +72,8 @@ custom:
         - npm
         - run
         - build
+      env:
+        NODE_ENV: production
     distribution:
       acmCertificateArn: ${env:CERTIFICATE_ARN}
       dnsName: ${env:DOMAIN_NAME}
