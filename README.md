@@ -54,6 +54,9 @@ custom:
   * `env`: (*Map*) A key/value mapping of environment variables and values to inject into the frontend start command.
   * `cwdDir`: (*string*) The directory from which to run the `offline.command`. Defaults to `./frontend`.
 
+## Offline Integration
+This plugin seamlessly integrates with [`serverless-offline`](https://www.npmjs.com/package/serverless-offline). Simply Add an `offline` configuration under `custom.serverless-frontend-plugin` in your `serverless.yml`. See `offline` options above.
+
 ## Examples
 See [the test configs](https://github.com/rogersgt/serverless-frontend-plugin/tree/master/tests/configs) on Github for working examples. Just be sure to replace the following section in the `serverless.yml`:
 
