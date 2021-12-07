@@ -55,4 +55,14 @@ custom:
   * `cwdDir`: (*string*) The directory from which to run the `offline.command`. Defaults to `./frontend`.
 
 ## Examples
-See [the source code](https://github.com/rogersgt/serverless-frontend-plugin/tree/master/tests/configs) on Github for working examples.
+See [the test configs](https://github.com/rogersgt/serverless-frontend-plugin/tree/master/tests/configs) on Github for working examples. Just be sure to replace the following section in the `serverless.yml`:
+
+```YAML
+# Replace this
+plugins:
+  - ../../../index.js
+
+# With this
+plugins:
+- serverless-frontend-plugin
+```
