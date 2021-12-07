@@ -87,14 +87,6 @@
         },
         "VersioningConfiguration": {
           "Status": "Suspended"
-        },
-        "WebsiteConfiguration": {
-          "IndexDocument": {
-            "Ref": "IndexDocument"
-          },
-          "ErrorDocument": {
-            "Ref": "ErrorDocument"
-          }
         }
       }
     },
@@ -108,7 +100,11 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Principal": "*",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${AccessIdentity}"
+                }
+              },
               "Effect": "Allow",
               "Action": "s3:GetObject",
               "Resource": {
@@ -161,37 +157,29 @@
             "Enabled": true,
             "Origins": [
               {
-                "Id": { "Ref": "FrontendBucket" },
                 "DomainName": {
-                  "Fn::Sub": "${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com"
+                  "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
                 },
-                "CustomOriginConfig": {
-                  "OriginProtocolPolicy": "http-only"
+                "Id": {
+                  "Fn::Sub": "${AWS::StackName}"
+                },
+                "S3OriginConfig" : {
+                    "OriginAccessIdentity": {
+                      "Fn::Sub": "origin-access-identity/cloudfront/${AccessIdentity}"
+                    }
                 }
               }
             ],
-            "DefaultCacheBehavior": {
-              "AllowedMethods": [
-                "GET",
-                "HEAD",
-                "OPTIONS"
-              ],
-              "CachedMethods": [
-                "GET",
-                "HEAD"
-              ],
-              "TargetOriginId": { "Ref": "FrontendBucket" },
-              "ViewerProtocolPolicy": "redirect-to-https",
-              "ForwardedValues": {
-                "QueryString": false,
-                "Cookies": {
-                  "Forward": "none"
-                }
+            "DefaultCacheBehavior" : {
+              "AllowedMethods" : [ "GET", "HEAD", "OPTIONS" ],  
+              "TargetOriginId" : {
+                "Fn::Sub": "${AWS::StackName}"
               },
-              "MaxTTL": 31536000,
-              "MinTTL": 0,
-              "DefaultTTL": 86400,
-              "Compress": true
+              "ForwardedValues" : {
+                "QueryString" : "false",
+                "Cookies" : { "Forward" : "none" }
+              },
+              "ViewerProtocolPolicy" : "allow-all"
             }
           },
           "Tags" : [

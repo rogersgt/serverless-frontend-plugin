@@ -8,7 +8,7 @@ const {
   execCmd,
 } = require('./lib/child_process');
 
-const defaultTemplate = require('./cloudformation-templates/default.json');
+const templates = require('./cloudformation-templates');
 
 class ServerlessFrontendPlugin {
   name = 'serverless-frontend-plugin';
@@ -67,6 +67,7 @@ class ServerlessFrontendPlugin {
       distDir = 'frontend/dist',
       bucket = {},
       distribution = {},
+      mode = 'cloudfront',
     } = frontendConfig;
 
     const {
@@ -89,7 +90,7 @@ class ServerlessFrontendPlugin {
     const stackExists = await this.stackExists();
     const cfParams = {
       StackName: stackName,
-      TemplateBody: JSON.stringify(defaultTemplate),
+      TemplateBody: JSON.stringify(templates[mode]),
       Parameters: [
         {
           ParameterKey: 'Stage',
@@ -162,10 +163,10 @@ class ServerlessFrontendPlugin {
         Key: key,
         Body: readFileSync(file),
         ...(contentType) && { ContentType: contentType },
-        ContentDisposition: 'inline',
+        // ContentDisposition: 'inline',
         /* If index.html, set cache for 5 minutes; else 24 hours */
         CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
-        ACL: 'public-read',
+        // ACL: 'public-read',
         StorageClass: 'STANDARD',
       }).promise();
     }));
