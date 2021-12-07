@@ -27,6 +27,7 @@ class ServerlessFrontendPlugin {
       'before:package:finalize': this.buildClient.bind(this),
       'before:deploy:deploy': this.deployClient.bind(this),
       'before:remove:remove': this.deleteClient.bind(this),
+      'offline:start:init': this.dev.bind(this),
     };
   }
 
@@ -39,7 +40,7 @@ class ServerlessFrontendPlugin {
 
     const {
       cwdDir = 'client',
-      command = ['echo', 'no', 'command'],
+      command = ['echo', 'no', 'frontend', 'build', 'command'],
       env = {},
     } = build;
 
@@ -152,7 +153,6 @@ class ServerlessFrontendPlugin {
     await Promise.all(frontendFiles.map(file => {
       const filePathArr = file.split('/');
       const key = filePathArr[filePathArr.length - 1];
-      this.serverless.cli.log(`Uploading ${file} to ${bucketName}/${key}`);
 
       const isIndexhtml = key === 'index.html';
 
@@ -225,6 +225,20 @@ class ServerlessFrontendPlugin {
         StackName: stackName,
       }).promise();
     }
+  }
+
+  dev() {
+    const {
+      offline = {},
+    } = this.getConfig();
+    const {
+      env = {},
+      command = ['echo', 'no', 'frontend', 'offline', 'command'],
+      cwdDir = 'frontend',
+    } = offline;
+    const cmd = command[0];
+    const cmdOpts = command.splice(1, command.length - 1);
+    execCmd(cmd, cmdOpts, cwdDir, env, this.serverless.cli.log);
   }
 
   getBucketName() {
