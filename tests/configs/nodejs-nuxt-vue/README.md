@@ -1,4 +1,4 @@
-# nodejs-nuxt
+# nodejs-nuxt-vue
 
 ## deploy
 * Cope `sample.env` to `.env`
