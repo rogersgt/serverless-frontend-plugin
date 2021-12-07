@@ -49,3 +49,6 @@ custom:
   * `altDnsName`: (*string*) Another DNS name to use for this Cloudfront distribution.
   * `acmCertificateArn`: (*string*, *Required*) AWS ACM Certificate Arn that covers the domain names listed in `aliases`.
   * `hostedZoneName`: (*string*) Name of the AWS Route53 Hosted Zone to create the Route53 records. Defaults to the value of `dnsName`.
+
+## Examples
+See [the source code](https://github.com/rogersgt/serverless-frontend-plugin/tree/master/tests/configs) on Github for working examples.
