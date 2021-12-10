@@ -48,6 +48,13 @@ custom:
   * `altDnsName`: (*string*) Another DNS name to use for this Cloudfront distribution.
   * `acmCertificateArn`: (*string*, *Required*) AWS ACM Certificate Arn that covers the domain names listed in `aliases`.
   * `hostedZoneName`: (*string*) Name of the AWS Route53 Hosted Zone to create the Route53 records. Defaults to the value of `dnsName`.
+  * `mimeTypes`: (*Map*) A key/value mapping of file extensions and mime types to override. For example:
+  ```YAML
+  ...
+    distribution:
+      mimeTypes:
+        html: text/html # default
+  ```
 * `offline`: (*Map*)
   * `command`: (*string*[]) Command and options as an array of strings. For example, `["npm", "start"]` Defaults to `["echo", "no", "frontend", "offline", "command"]`.
   * `env`: (*Map*) A key/value mapping of environment variables and values to inject into the frontend start command.

@@ -40,7 +40,7 @@ class ServerlessFrontendPlugin {
     } = frontendConfig;
 
     const {
-      cwdDir = 'client',
+      cwdDir = 'frontend',
       command = ['echo', 'no', 'frontend', 'build', 'command'],
       env = {},
     } = build;
@@ -81,6 +81,7 @@ class ServerlessFrontendPlugin {
       dnsName,
       altDnsName = '',
       hostedZoneName,
+      mimeTypes = {},
     } = distribution;
 
     const stackName = this.getStackName();
@@ -156,6 +157,9 @@ class ServerlessFrontendPlugin {
 
       const isHtml = key.match(/.*\.html$/);
       // const mimeType = mimeTypes.lookup(key);
+      const keyPartArr = key.split('.');
+      const fileExt = keyPartArr[keyPartArr.length - 1];
+      const customMimeType = mimeTypes[fileExt];
 
       return s3Client.putObject({
         Bucket: bucketName,
@@ -166,6 +170,9 @@ class ServerlessFrontendPlugin {
         ...isHtml && {
           ContentType: 'text/html',
           ContentDisposition: 'inline',
+        },
+        ...customMimeType && {
+          ContentType: customMimeType,
         },
         // ...mimeType && { ContentType: mimeType },
       }).promise();
