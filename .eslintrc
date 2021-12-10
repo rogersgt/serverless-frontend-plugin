@@ -1,0 +1,19 @@
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "2020"
+  },
+  "env": {
+    "es6": true
+  },
+  "globals": {
+    "require": true,
+    "module": true,
+    "process": true,
+    "console": true,
+    "setTimeout": true
+  },
+  "rules": {
+    "no-extra-boolean-cast": 0
+  }
+}
