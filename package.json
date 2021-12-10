@@ -1,6 +1,6 @@
 {
   "name": "serverless-frontend-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Serverless plugin for deploying frontend apps",
   "main": "index.js",
   "homepage": "https://github.com/rogersgt/serverless-frontend-plugin#README.md",
