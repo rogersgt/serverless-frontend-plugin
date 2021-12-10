@@ -72,7 +72,6 @@ class ServerlessFrontendPlugin {
     } = frontendConfig;
 
     const {
-      existing = false,
       indexDocument = 'index.html',
       errorDocument = 'index.html',
     } = bucket;
@@ -132,21 +131,20 @@ class ServerlessFrontendPlugin {
       ],
     };
 
-    if (!existing) {
-      if (!stackExists) {
-        await cfClient.createStack(cfParams).promise();
-      } else {
-        await cfClient.updateStack(cfParams).promise()
-          .catch((e) => {
-            if (e.message.match(/No updates are to be performed/)) {
-              return Promise.resolve();
-            }
-            throw e;
-          });
-      }
-  
-      await this.waitForStackComplete();
+    
+    if (!stackExists) {
+      await cfClient.createStack(cfParams).promise();
+    } else {
+      await cfClient.updateStack(cfParams).promise()
+        .catch((e) => {
+          if (e.message.match(/No updates are to be performed/)) {
+            return Promise.resolve();
+          }
+          throw e;
+        });
     }
+
+    await this.waitForStackComplete();
 
     const frontendFiles = await readDir(distDir);
     const s3Client = this.getS3Client();
