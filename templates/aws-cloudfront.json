@@ -153,16 +153,16 @@
           "Origins": [
             {
               "DomainName": {
-                "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
+                "Fn::Sub": "${FrontendBucket}.s3-website.${AWS::Region}.amazonaws.com"
               },
               "Id": { "Ref": "FrontendBucket" },
-              "S3OriginConfig": {
-                "OriginAccessIdentity": ""
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "http-only"
               }
             }
           ],
           "DefaultCacheBehavior" : {
-            "AllowedMethods" : [ "GET", "HEAD", "OPTIONS" ],  
+            "AllowedMethods" : [ "GET", "HEAD" ],  
             "TargetOriginId" : {
               "Ref": "FrontendBucket"
             },
@@ -246,6 +246,11 @@
           },
           { "Fn::Sub": "https://${DnsName}" }
         ]
+      }
+    },
+    "S3FrontendUrl": {
+      "Value": {
+        "Fn::GetAtt": ["FrontendBucket", "WebsiteURL"]
       }
     }
   }

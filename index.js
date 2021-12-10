@@ -1,7 +1,9 @@
 'use strict';
+const path = require('path');
 const readDir = require('recursive-readdir');
+// const mimeTypes = require('mime-types');
 const { readFileSync } = require('fs');
-const serverless = require('serverless');
+const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
 const {
   execCmd,
@@ -10,14 +12,13 @@ const {
 const templates = require('./templates');
 
 class ServerlessFrontendPlugin {
-  name = 'serverless-frontend-plugin';
-
   /**
    * 
    * @param {serverless} serverless Serverless Instance
    */
   constructor(serverless) {
     this.serverless = serverless;
+    this.name = 'serverless-frontend-plugin';
 
     const region = this.getRegion();
     this.cfClient = new CloudFormation({ region });
@@ -151,16 +152,24 @@ class ServerlessFrontendPlugin {
     const s3Client = this.getS3Client();
 
     await Promise.all(frontendFiles.map(file => {
-      const filePathArr = file.split('/');
-      const key = filePathArr[filePathArr.length - 1];
+      const key = file
+        .replace(path.resolve(`${process.cwd()}/` + distDir), '')
+        .replace(`${distDir}/`, '');
 
-      const isIndexhtml = key === 'index.html';
+      const isHtml = key.match(/.*\.html$/);
+      // const mimeType = mimeTypes.lookup(key);
 
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
         Body: readFileSync(file).toString('binary'),
-        CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
+        ACL: 'public-read',
+        CacheControl: `max-age=${isHtml ? 300 : 86400}`,
+        ...isHtml && {
+          ContentType: 'text/html',
+          ContentDisposition: 'inline',
+        },
+        // ...mimeType && { ContentType: mimeType },
       }).promise();
     }));
 

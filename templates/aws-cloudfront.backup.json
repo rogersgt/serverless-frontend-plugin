@@ -70,6 +70,11 @@
         "BucketName": {
           "Ref": "BucketName"
         },
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": { "Ref": "IndexDocument" },
+          "ErrorDocument": { "Ref": "ErrorDocument" }
+        },
         "CorsConfiguration": {
           "CorsRules": [
             {
@@ -94,11 +99,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Principal": {
-                "AWS": {
-                  "Fn::Sub": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${AccessIdentity}"
-                }
-              },
+              "Principal": "*",
               "Effect": "Allow",
               "Action": "s3:GetObject",
               "Resource": {
@@ -112,94 +113,80 @@
     "Distribution": {
       "Type" : "AWS::CloudFront::Distribution",
       "Properties" : {
-          "DistributionConfig" : {
-            "Aliases": {
-              "Fn::If": [
-                "CreateAltDnsName",
-                [
-                  { "Ref": "DnsName" },
-                  { "Ref": "AltDnsName" }
-                ],
-                [
-                  { "Ref": "DnsName" }
-                ]
+        "DistributionConfig" : {
+          "Aliases": {
+            "Fn::If": [
+              "CreateAltDnsName",
+              [
+                { "Ref": "DnsName" },
+                { "Ref": "AltDnsName" }
+              ],
+              [
+                { "Ref": "DnsName" }
               ]
-            },
-            "ViewerCertificate": {
-              "SslSupportMethod": "sni-only",
-              "AcmCertificateArn": {
-                "Ref": "AcmCertificateArn"
-              }
-            },
-            "DefaultRootObject": {
-              "Ref": "IndexDocument"
-            },
-            "CustomErrorResponses": [
-              {
-                "ErrorCode": 404,
-                "ErrorCachingMinTTL": 0,
-                "ResponseCode": {
-                  "Fn::If": [
-                    "ErrorDocEqualsIndex",
-                    200,
-                    404
-                  ]
-                },
-                "ResponsePagePath": { "Fn::Sub": "/${ErrorDocument}" }
-              }
-            ],
-            "Enabled": true,
-            "Origins": [
-              {
-                "DomainName": {
-                  "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
-                },
-                "Id": {
-                  "Fn::Sub": "${AWS::StackName}"
-                },
-                "S3OriginConfig" : {
-                    "OriginAccessIdentity": {
-                      "Fn::Sub": "origin-access-identity/cloudfront/${AccessIdentity}"
-                    }
-                }
-              }
-            ],
-            "DefaultCacheBehavior" : {
-              "AllowedMethods" : [ "GET", "HEAD", "OPTIONS" ],  
-              "TargetOriginId" : {
-                "Fn::Sub": "${AWS::StackName}"
-              },
-              "ForwardedValues" : {
-                "QueryString" : false,
-                "Cookies" : { "Forward" : "none" }
-              },
-              "ViewerProtocolPolicy" : "redirect-to-https"
+            ]
+          },
+          "ViewerCertificate": {
+            "SslSupportMethod": "sni-only",
+            "AcmCertificateArn": {
+              "Ref": "AcmCertificateArn"
             }
           },
-          "Tags" : [
+          "DefaultRootObject": {
+            "Ref": "IndexDocument"
+          },
+          "CustomErrorResponses": [
             {
-              "Key": "Name",
-              "Value": {
+              "ErrorCode": 404,
+              "ErrorCachingMinTTL": 0,
+              "ResponseCode": {
                 "Fn::If": [
-                  "UseStage",
-                  { "Fn::Sub": "${ServiceName}-${Stage}" },
-                  { "Ref": "ServiceName" }
+                  "ErrorDocEqualsIndex",
+                  200,
+                  404
                 ]
+              },
+              "ResponsePagePath": { "Fn::Sub": "/${ErrorDocument}" }
+            }
+          ],
+          "Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
+              },
+              "Id": { "Ref": "FrontendBucket" },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": ""
               }
             }
-          ]
-        }
-    },
-    "AccessIdentity": {
-      "Type" : "AWS::CloudFront::CloudFrontOriginAccessIdentity",
-      "Properties" : {
-        "CloudFrontOriginAccessIdentityConfig": {
-          "Comment": {
-            "Fn::Sub": "Managed by ${AWS::StackName}"
+          ],
+          "DefaultCacheBehavior" : {
+            "AllowedMethods" : [ "GET", "HEAD" ],  
+            "TargetOriginId" : {
+              "Ref": "FrontendBucket"
+            },
+            "ForwardedValues" : {
+              "QueryString" : false,
+              "Cookies" : { "Forward" : "none" }
+            },
+            "ViewerProtocolPolicy" : "redirect-to-https"
           }
-        }
+        },
+        "Tags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::If": [
+                "UseStage",
+                { "Fn::Sub": "${ServiceName}-${Stage}" },
+                { "Ref": "ServiceName" }
+              ]
+            }
+          }
+        ]
       }
-    },    
+    },  
     "R53Record1": {
       "Type": "AWS::Route53::RecordSet",
       "Properties": {
