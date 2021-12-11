@@ -1,7 +1,7 @@
 'use strict';
 const path = require('path');
 const readDir = require('recursive-readdir');
-// const mimeTypes = require('mime-types');
+const mimeTypeLib = require('mime-types');
 const { readFileSync } = require('fs');
 const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
@@ -156,7 +156,7 @@ class ServerlessFrontendPlugin {
         .replace(`${distDir}/`, '');
 
       const isHtml = key.match(/.*\.html$/);
-      // const mimeType = mimeTypes.lookup(key);
+      const mimeType = mimeTypeLib.lookup(key);
       const keyPartArr = key.split('.');
       const fileExt = keyPartArr[keyPartArr.length - 1];
       const customMimeType = mimeTypes[fileExt];
@@ -174,7 +174,7 @@ class ServerlessFrontendPlugin {
         ...customMimeType && {
           ContentType: customMimeType,
         },
-        // ...mimeType && { ContentType: mimeType },
+        ...(mimeType && !customMimeType) && { ContentType: mimeType },
       }).promise();
     }));
 
