@@ -166,10 +166,10 @@ class ServerlessFrontendPlugin {
         Key: key,
         Body: readFileSync(file).toString('binary'),
         ACL: 'public-read',
+        ContentDisposition: 'inline',
         CacheControl: `max-age=${isHtml ? 300 : 86400}`,
         ...isHtml && {
           ContentType: 'text/html',
-          ContentDisposition: 'inline',
         },
         ...customMimeType && {
           ContentType: customMimeType,
