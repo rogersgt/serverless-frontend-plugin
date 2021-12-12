@@ -1,0 +1,15 @@
+{
+  "name": "nodejs-html",
+  "version": "1.0.0",
+  "description": "## deploy * Cope `sample.env` to `.env` * Fil in the values of `.env` * Run: ```bash serverless deploy ```",
+  "main": "handler.js",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "start": "serverless offline start"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^13.0.2"
+  }
+}
