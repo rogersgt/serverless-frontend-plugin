@@ -285,7 +285,7 @@ class ServerlessFrontendPlugin {
   }
 
   getStackName() {
-    return this.serverless.service.provider.stackName 
+    return this.serverless.service.custom[this.name].stackName 
       || `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
   }
 
