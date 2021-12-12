@@ -164,12 +164,11 @@ class ServerlessFrontendPlugin {
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
-        Body: readFileSync(file).toString('binary'),
-        ACL: 'public-read',
+        Body: readFileSync(file),
         CacheControl: `max-age=${isHtml ? 300 : 86400}`,
+        ContentDisposition: 'inline',
         ...isHtml && {
           ContentType: 'text/html',
-          ContentDisposition: 'inline',
         },
         ...customMimeType && {
           ContentType: customMimeType,
