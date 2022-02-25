@@ -1,7 +1,7 @@
 'use strict';
 const path = require('path');
 const readDir = require('recursive-readdir');
-const { readFileSync, existsSync } = require('fs');
+const { readFileSync } = require('fs');
 const mimeTypeLib = require('mime-types');
 const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
@@ -18,10 +18,11 @@ class ServerlessFrontendPlugin {
    * @param {object} cliOptions serverless CLI options
    * @param {object} serverlessUtils serverless utility tools like log
    */
-  constructor(serverless, cliOptions, serverlessUtils) {
+  constructor(serverless, cliOptions, { log, writeText }) {
     this.serverless = serverless;
     this.name = 'serverless-frontend-plugin';
-    this.log = serverlessUtils.log;
+    this.log = log;
+    this.writeText = writeText;
 
     const region = this.getRegion();
     this.cfClient = new CloudFormation({ region });
@@ -53,9 +54,7 @@ class ServerlessFrontendPlugin {
     const options = command.splice(1, command.length -1);
     this.log.debug(`Executing cmd: ${cmd} with options: ${options}`);
 
-    const execCwdDir = existsSync(cwdDir) ? cwdDir : process.cwd();
-
-    await execCmd(cmd, options, execCwdDir, env, this.log);
+    await execCmd(cmd, options, cwdDir, env, this.log.info);
   }
 
   async bucketExists() {
@@ -82,7 +81,7 @@ class ServerlessFrontendPlugin {
     const {
       indexDocument = 'index.html',
       errorDocument = 'index.html',
-      forbiddenDocument = "index.html",
+      forbiddenDocument = 'index.html',
     } = bucket;
 
     const {
@@ -201,13 +200,7 @@ class ServerlessFrontendPlugin {
     }, {});
 
     const frontendUrlsArray = formattedOutputsObj.FrontendUrls.split(',');
-
-    this.log.info(`
-
-      -------- Serverless Frontend Plugin -------
-      URLs: ${JSON.stringify(frontendUrlsArray)}
-
-    `);
+    this.serverless.addServiceOutputSection('frontend_urls', frontendUrlsArray);
   }
 
   async deleteClient() {
@@ -264,7 +257,7 @@ class ServerlessFrontendPlugin {
     } = offline;
     const cmd = command[0];
     const cmdOpts = command.splice(1, command.length - 1);
-    execCmd(cmd, cmdOpts, cwdDir, env, this.log);
+    execCmd(cmd, cmdOpts, cwdDir, env, this.log.info);
   }
 
   getBucketName() {
