@@ -74,6 +74,7 @@ class ServerlessFrontendPlugin {
     const {
       indexDocument = 'index.html',
       errorDocument = 'index.html',
+      forbiddenDocument = "index.html",
     } = bucket;
 
     const {
@@ -112,6 +113,10 @@ class ServerlessFrontendPlugin {
         {
           ParameterKey: 'ErrorDocument',
           ParameterValue: errorDocument,
+        },
+        {
+          ParameterKey: 'ForbiddenDocument',
+          ParameterValue: forbiddenDocument,
         },
         {
           ParameterKey: 'DnsName',

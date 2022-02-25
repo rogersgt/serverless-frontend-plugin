@@ -43,6 +43,7 @@ custom:
   * `name`: (*string*) Name of the S3 Bucket to upload the `distDir` to. Defaults to a generated name.
   * `indexDocument`: (*string*) Defaults to `index.html`.
   * `errorDocument`: (*string*) Defaults to `index.html`.
+  * `forbiddenDocument`: (*string*) Defaults to `index.html`.
 * `distribution`: (*Map*)
   * `dnsName`: (*string* *Required*) A DNS name to use for this Cloudfront distribution. This is required and has no default values.
   * `altDnsName`: (*string*) Another DNS name to use for this Cloudfront distribution.
