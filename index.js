@@ -1,7 +1,7 @@
 'use strict';
 const readDir = require('recursive-readdir');
 const { readFileSync } = require('fs');
-const serverless = require('serverless');
+const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
 const {
   execCmd,
@@ -10,14 +10,16 @@ const {
 const templates = require('./templates');
 
 class ServerlessFrontendPlugin {
-  name = 'serverless-frontend-plugin';
-
   /**
-   * 
+   *
    * @param {serverless} serverless Serverless Instance
+   * @param {object} cliOptions serverless CLI options
+   * @param {object} serverlessUtils serverless utility tools like log
    */
-  constructor(serverless) {
+  constructor(serverless, cliOptions, serverlessUtils) {
     this.serverless = serverless;
+    this.name = 'serverless-frontend-plugin';
+    this.log = serverlessUtils.log;
 
     const region = this.getRegion();
     this.cfClient = new CloudFormation({ region });
@@ -32,7 +34,7 @@ class ServerlessFrontendPlugin {
   }
 
   async buildClient() {
-    this.serverless.cli.log('Checking for frontend build commands...');
+    this.log.info('Checking for frontend build commands...');
     const frontendConfig = this.getConfig();
     const {
       build = {},
@@ -46,7 +48,9 @@ class ServerlessFrontendPlugin {
 
     const cmd = command[0];
     const options = command.splice(1, command.length -1);
-    await execCmd(cmd, options, cwdDir, env, this.serverless.cli.log);
+    this.log.debug(`Executing cmd: ${cmd} with options: ${options}`);
+
+    await execCmd(cmd, options, cwdDir, env, this.log);
   }
 
   async bucketExists() {
@@ -143,14 +147,14 @@ class ServerlessFrontendPlugin {
             throw e;
           });
       }
-  
+
       await this.waitForStackComplete();
     }
 
     const frontendFiles = await readDir(distDir);
     const s3Client = this.getS3Client();
 
-    await Promise.all(frontendFiles.map(file => {
+    await Promise.all(frontendFiles.map((file) => {
       const filePathArr = file.split('/');
       const key = filePathArr[filePathArr.length - 1];
 
@@ -164,7 +168,7 @@ class ServerlessFrontendPlugin {
       }).promise();
     }));
 
-    this.serverless.cli.log(`frontend stack name: ${stackName} finished deploying.`);
+    this.log.debug(`frontend stack name: ${stackName} finished deploying.`);
     const outputs = await this.getStackOutputs();
     const formattedOutputsObj = outputs.reduce((prev, output) => {
       const {
@@ -176,11 +180,12 @@ class ServerlessFrontendPlugin {
     }, {});
 
     const frontendUrlsArray = formattedOutputsObj.FrontendUrls.split(',');
-    /* This line doesn't seem to be working.. so the extra log on the next line is a workaround */
-    this.serverless.addServiceOutputSection('frontend url', frontendUrlsArray);
-    this.serverless.cli.log(`
+
+    this.log.info(`
+
       -------- Serverless Frontend Plugin -------
       URLs: ${JSON.stringify(frontendUrlsArray)}
+
     `);
   }
 
@@ -195,7 +200,7 @@ class ServerlessFrontendPlugin {
       let existingItems = true;
       let nextMarker;
 
-      while(existingItems) {
+      while (existingItems) {
         const {
           IsTruncated,
           Contents,
@@ -243,7 +248,7 @@ class ServerlessFrontendPlugin {
 
   getBucketName() {
     const { bucket = {} } = this.getConfig();
-    const stage = this.serverless.service.stage;
+    const { stage } = this.serverless.service;
     return bucket.name || `${this.serverless.service.service}${!!stage ? `-${stage}` : ''}-${this.getRegion()}`;
   }
 
@@ -252,16 +257,16 @@ class ServerlessFrontendPlugin {
   }
 
   /**
-   * 
-   * @returns {CloudFormation} CloudFormation Client
+   *
+   * @return {CloudFormation} CloudFormation Client
    */
   getCloudFormationClient() {
     return this.cfClient;
   }
 
   /**
-   * 
-   * @returns {S3} S3 Client
+   *
+   * @return {S3} S3 Client
    */
   getS3Client() {
     return this.s3Client;
@@ -272,8 +277,8 @@ class ServerlessFrontendPlugin {
   }
 
   getStackName() {
-    return this.serverless.service.provider.stackName 
-      || `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
+    return this.serverless.service.provider.stackName ||
+      `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
   }
 
   async getStackOutputs() {
@@ -298,20 +303,24 @@ class ServerlessFrontendPlugin {
 
   async waitForStackComplete() {
     const stackName = this.getStackName();
+    this.log.info(`Deploying frontend stack: ${stackName}`);
+
     const cfClient = this.getCloudFormationClient();
     const { Stacks: stacks } = await cfClient.describeStacks({ StackName: stackName }).promise();
     const { StackStatus: status, StackStatusReason: message } = stacks.pop();
-    this.serverless.cli.log(`${stackName} status: ${status}`);
+    this.log.debug(`${stackName} status: ${status}`);
 
     if (status.match(/(FAILED|ROLLBACK)/)) {
-      throw new Error(`serverless-frontend-plugin stack: ${stackName} failed with a status of ${status} due to: ${message}`);
+      // eslint-disable-next-line max-len
+      const errMessage = `serverless-frontend-plugin stack: ${stackName} failed with a status of ${status} due to: ${message}`;
+      throw new Error(errMessage);
     }
 
     if (status.match(/(COMPLETE)/)) {
       return null;
     }
 
-    await new Promise(res => setTimeout(res, 3000));
+    await new Promise((res) => setTimeout(res, 3000));
     return this.waitForStackComplete();
   }
 }
