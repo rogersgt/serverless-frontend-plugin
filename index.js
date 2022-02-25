@@ -54,7 +54,7 @@ class ServerlessFrontendPlugin {
     const options = command.splice(1, command.length -1);
     this.log.debug(`Executing cmd: ${cmd} with options: ${options}`);
 
-    await execCmd(cmd, options, cwdDir, env, this.log.info);
+    await execCmd(cmd, options, cwdDir, env, this.writeText);
   }
 
   async bucketExists() {
