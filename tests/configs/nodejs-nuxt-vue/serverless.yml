@@ -18,7 +18,7 @@ service: nodejs-nuxt-vue
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: '3'
 useDotenv: true
 
 provider:
@@ -62,6 +62,7 @@ provider:
 
 plugins:
   - ../../../index.js
+  - serverless-offline
 
 custom:
   serverless-frontend-plugin:
@@ -78,6 +79,14 @@ custom:
       acmCertificateArn: ${env:CERTIFICATE_ARN}
       dnsName: ${env:DOMAIN_NAME}
       hostedZoneName: ${env:HOSTED_ZONE_NAME}
+    offline:
+      env:
+        NODE_ENV: development
+      cwdDir: frontend
+      command:
+        - npm
+        - run
+        - dev
 
 functions:
   hello:
