@@ -60,7 +60,7 @@ provider:
 #    - include-me-dir/**
 plugins:
   - serverless-offline
-  - serverless-frontend-plugin
+  - ../../../index.js
   - serverless-domain-manager
 
 custom:
@@ -72,17 +72,15 @@ custom:
     build:
       cwdDir: frontend
       command:
-        - npm
-        - run
+        - yarn
         - build
-      env:
-        NODE_ENV: production
-        VUE_APP_API_BASE_URL: https://${env:API_DOMAIN_NAME}
+      # env:
+      #   NODE_ENV: production
+      #   VUE_APP_API_BASE_URL: https://${env:API_DOMAIN_NAME}
     offline:
       cwdDir: frontend
       command:
-        - npm
-        - run
+        - yarn
         - serve
       env:
         NODE_ENV: development
