@@ -79,5 +79,5 @@ plugins:
 ## Serverless Framework Version Compatibility
 | `serverless-frontend-plugin` | `serverless` |
 | :-------: | :----: |
-| `1.0.6`   | `2.x` |
+| `1.x`   | `2.x` |
 | `2.x` | `3.x` |
