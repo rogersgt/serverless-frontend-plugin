@@ -1,6 +1,6 @@
 'use strict';
 const readDir = require('recursive-readdir');
-const { readFileSync } = require('fs');
+const { readFileSync, existsSync } = require('fs');
 const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
 const {
@@ -36,12 +36,13 @@ class ServerlessFrontendPlugin {
   async buildClient() {
     this.log.info('Checking for frontend build commands...');
     const frontendConfig = this.getConfig();
+    this.log.debug({ frontendConfig });
     const {
       build = {},
     } = frontendConfig;
 
     const {
-      cwdDir = 'client',
+      cwdDir = './frontend',
       command = ['echo', 'no', 'frontend', 'build', 'command'],
       env = {},
     } = build;
@@ -50,7 +51,9 @@ class ServerlessFrontendPlugin {
     const options = command.splice(1, command.length -1);
     this.log.debug(`Executing cmd: ${cmd} with options: ${options}`);
 
-    await execCmd(cmd, options, cwdDir, env, this.log);
+    const execCwdDir = existsSync(cwdDir) ? cwdDir : process.cwd();
+
+    await execCmd(cmd, options, execCwdDir, env, this.log);
   }
 
   async bucketExists() {

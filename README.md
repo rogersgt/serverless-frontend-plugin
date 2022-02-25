@@ -33,10 +33,10 @@ custom:
 
 ## Options
 * `mode`: (*string*) Type of frontend hosting. Currently the only supported mode is `cloudfront`.
-* `distDir`: (*string*) The directory that gets uploaded and hosted as a static site. Defaults to `frontend/dist`.
+* `distDir`: (*string*) The directory that gets uploaded and hosted as a static site. Defaults to `frontend/dist` if the directory exists.
 * `build`: (*Map*)
   * `command`: (*string*[]) Command and options as an array of strings. For example, `["npm", "run", "build"]` Defaults to `["echo", "no", "frontend", "build", "command"]`.
-  * `cwdDir`: (*string*) The directory from which to run the `build.command`. Defaults to `./frontend`.
+  * `cwdDir`: (*string*) The directory from which to run the `build.command`. Defaults to `./frontend` if the directory exists.
   * `env`: (*Map*) A key/value mapping of environment variables and values to inject into the frontend build.
 * `stackName`: (*string*) Name of the CloudFormation stack for the frontend. Defaults to `<service-name>-<stage>-<region>`.
 * `bucket`: (*Map*)
@@ -52,7 +52,7 @@ custom:
 * `offline`: (*Map*)
   * `command`: (*string*[]) Command and options as an array of strings. For example, `["npm", "start"]` Defaults to `["echo", "no", "frontend", "offline", "command"]`.
   * `env`: (*Map*) A key/value mapping of environment variables and values to inject into the frontend start command.
-  * `cwdDir`: (*string*) The directory from which to run the `offline.command`. Defaults to `./frontend`.
+  * `cwdDir`: (*string*) The directory from which to run the `offline.command`. Defaults to `./frontend` if the directory exists.
 
 ## Offline Integration
 This plugin seamlessly integrates with [`serverless-offline`](https://www.npmjs.com/package/serverless-offline). Simply Add an `offline` configuration under `custom.serverless-frontend-plugin` in your `serverless.yml`. See `offline` options above.
@@ -69,3 +69,9 @@ plugins:
 plugins:
 - serverless-frontend-plugin
 ```
+
+## Serverless Framework Version Compatibility
+| `serverless-frontend-plugin` | `serverless` |
+| :-------: | :----: |
+| `1.0.6`   | `2.x` |
+| `2.x` | `3.x` |
