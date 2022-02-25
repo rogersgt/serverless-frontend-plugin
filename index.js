@@ -257,7 +257,7 @@ class ServerlessFrontendPlugin {
     } = offline;
     const cmd = command[0];
     const cmdOpts = command.splice(1, command.length - 1);
-    execCmd(cmd, cmdOpts, cwdDir, env, this.log.info);
+    execCmd(cmd, cmdOpts, cwdDir, env, this.writeText);
   }
 
   getBucketName() {

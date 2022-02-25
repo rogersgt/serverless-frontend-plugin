@@ -19,12 +19,11 @@ useDotenv: true
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: '3'
 
 provider:
   name: aws
   runtime: nodejs12.x
-  lambdaHashingVersion: 20201221
   httpApi:
     cors: true
 
@@ -73,7 +72,8 @@ custom:
     build:
       cwdDir: frontend
       command:
-        - yarn
+        - npm
+        - run
         - build
       env:
         NODE_ENV: production
@@ -81,7 +81,8 @@ custom:
     offline:
       cwdDir: frontend
       command:
-        - yarn
+        - npm
+        - run
         - serve
       env:
         NODE_ENV: development
