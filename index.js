@@ -200,7 +200,7 @@ class ServerlessFrontendPlugin {
     }, {});
 
     const frontendUrlsArray = formattedOutputsObj.FrontendUrls.split(',');
-    this.serverless.addServiceOutputSection('frontend_urls', frontendUrlsArray);
+    this.serverless.addServiceOutputSection('Cloudfront URLs', frontendUrlsArray);
   }
 
   async deleteClient() {
