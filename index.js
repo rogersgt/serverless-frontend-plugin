@@ -1,6 +1,8 @@
 'use strict';
+const path = require('path');
 const readDir = require('recursive-readdir');
 const { readFileSync, existsSync } = require('fs');
+const mimeTypeLib = require('mime-types');
 const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
 const {
@@ -42,7 +44,7 @@ class ServerlessFrontendPlugin {
     } = frontendConfig;
 
     const {
-      cwdDir = './frontend',
+      cwdDir = 'frontend',
       command = ['echo', 'no', 'frontend', 'build', 'command'],
       env = {},
     } = build;
@@ -78,7 +80,6 @@ class ServerlessFrontendPlugin {
     } = frontendConfig;
 
     const {
-      existing = false,
       indexDocument = 'index.html',
       errorDocument = 'index.html',
     } = bucket;
@@ -88,6 +89,7 @@ class ServerlessFrontendPlugin {
       dnsName,
       altDnsName = '',
       hostedZoneName,
+      mimeTypes = {},
     } = distribution;
 
     const stackName = this.getStackName();
@@ -138,36 +140,47 @@ class ServerlessFrontendPlugin {
       ],
     };
 
-    if (!existing) {
-      if (!stackExists) {
-        await cfClient.createStack(cfParams).promise();
-      } else {
-        await cfClient.updateStack(cfParams).promise()
-          .catch((e) => {
-            if (e.message.match(/No updates are to be performed/)) {
-              return Promise.resolve();
-            }
-            throw e;
-          });
-      }
-
-      await this.waitForStackComplete();
+    if (!stackExists) {
+      await cfClient.createStack(cfParams).promise();
+    } else {
+      await cfClient.updateStack(cfParams).promise()
+        .catch((e) => {
+          if (e.message.match(/No updates are to be performed/)) {
+            return Promise.resolve();
+          }
+          throw e;
+        });
     }
+
+    await this.waitForStackComplete();
 
     const frontendFiles = await readDir(distDir);
     const s3Client = this.getS3Client();
 
     await Promise.all(frontendFiles.map((file) => {
-      const filePathArr = file.split('/');
-      const key = filePathArr[filePathArr.length - 1];
+      const key = file
+        .replace(path.resolve(`${process.cwd()}/` + distDir), '')
+        .replace(`${distDir}/`, '');
 
-      const isIndexhtml = key === 'index.html';
+      const isHtml = key.match(/.*\.html$/);
+      const mimeType = mimeTypeLib.lookup(key);
+      const keyPartArr = key.split('.');
+      const fileExt = keyPartArr[keyPartArr.length - 1];
+      const customMimeType = mimeTypes[fileExt];
 
       return s3Client.putObject({
         Bucket: bucketName,
         Key: key,
-        Body: readFileSync(file).toString('binary'),
-        CacheControl: `max-age=${isIndexhtml ? 300 : 86400}`,
+        Body: readFileSync(file),
+        CacheControl: `max-age=${isHtml ? 300 : 86400}`,
+        ContentDisposition: 'inline',
+        ...isHtml && {
+          ContentType: 'text/html',
+        },
+        ...customMimeType && {
+          ContentType: customMimeType,
+        },
+        ...(mimeType && !customMimeType) && { ContentType: mimeType },
       }).promise();
     }));
 
@@ -198,7 +211,7 @@ class ServerlessFrontendPlugin {
     if (bucketExists) {
       const bucketName = this.getBucketName();
       const s3Client = this.getS3Client();
-      this.serverless.cli.log(`Removing objects from ${bucketName}...`);
+      this.log.info(`Removing objects from ${bucketName}...`);
 
       let existingItems = true;
       let nextMarker;
@@ -228,7 +241,7 @@ class ServerlessFrontendPlugin {
     const stackName = this.getStackName();
     const stackExists = await this.stackExists();
     if (stackExists) {
-      this.serverless.cli.log(`Initiating deleteStack() for ${stackName}`);
+      this.log.debug(`Initiating deleteStack() for ${stackName}`);
       await this.cfClient.deleteStack({
         StackName: stackName,
       }).promise();
@@ -246,7 +259,7 @@ class ServerlessFrontendPlugin {
     } = offline;
     const cmd = command[0];
     const cmdOpts = command.splice(1, command.length - 1);
-    execCmd(cmd, cmdOpts, cwdDir, env, this.serverless.cli.log);
+    execCmd(cmd, cmdOpts, cwdDir, env, this.log);
   }
 
   getBucketName() {
@@ -280,8 +293,8 @@ class ServerlessFrontendPlugin {
   }
 
   getStackName() {
-    return this.serverless.service.provider.stackName ||
-      `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
+    return this.serverless.service.custom[this.name].stackName ||
+    `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
   }
 
   async getStackOutputs() {

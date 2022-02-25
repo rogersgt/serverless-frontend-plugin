@@ -5,3 +5,4 @@ node_modules
 .eslintignore
 .vscode
 .gitignore
+.eslintrc

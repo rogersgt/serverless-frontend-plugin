@@ -62,14 +62,23 @@ provider:
 
 plugins:
   - ../../../index.js
+  - serverless-offline
 
 custom:
+  serverless-offline:
+    httpPort: 8760
+    lambdaPort: 8761
   serverless-frontend-plugin:
+    offline:
+      command:
+        - node_modules/serve/bin/serve.js
+        - frontend
+      cwdDir: '.'
     distDir: frontend
     distribution:
       acmCertificateArn: ${env:CERTIFICATE_ARN}
       dnsName: ${env:DOMAIN_NAME}
-      hostedZoneName: ${env:HOSTED_ZONE}
+      hostedZoneName: ${env:HOSTED_ZONE_NAME}
 
 
 functions:

@@ -6,3 +6,8 @@ body {
 .header {
   text-align: center;
 }
+
+#icon {
+  width: 30%;
+  margin: 1% 35%;
+}

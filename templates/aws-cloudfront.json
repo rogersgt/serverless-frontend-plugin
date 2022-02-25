@@ -70,15 +70,6 @@
         "BucketName": {
           "Ref": "BucketName"
         },
-        "CorsConfiguration": {
-          "CorsRules": [
-            {
-              "AllowedHeaders": ["*"],
-              "AllowedMethods": ["GET", "HEAD"],
-              "AllowedOrigins": ["*"]
-            }
-          ]
-        },
         "VersioningConfiguration": {
           "Status": "Suspended"
         }
@@ -152,10 +143,10 @@
             "Origins": [
               {
                 "DomainName": {
-                  "Fn::Sub": "${FrontendBucket}.s3.amazonaws.com"
+                  "Fn::Sub": "${FrontendBucket}.s3.${AWS::Region}.amazonaws.com"
                 },
                 "Id": {
-                  "Fn::Sub": "${AWS::StackName}"
+                  "Fn::Sub": "${FrontendBucket}"
                 },
                 "S3OriginConfig" : {
                     "OriginAccessIdentity": {
@@ -167,7 +158,7 @@
             "DefaultCacheBehavior" : {
               "AllowedMethods" : [ "GET", "HEAD", "OPTIONS" ],  
               "TargetOriginId" : {
-                "Fn::Sub": "${AWS::StackName}"
+                "Fn::Sub": "${FrontendBucket}"
               },
               "ForwardedValues" : {
                 "QueryString" : false,
