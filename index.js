@@ -1,8 +1,8 @@
 'use strict';
 const path = require('path');
 const readDir = require('recursive-readdir');
-const { readFileSync } = require('fs');
 const mimeTypeLib = require('mime-types');
+const { readFileSync } = require('fs');
 const serverless = require('serverless'); // eslint-disable-line no-unused-vars
 const { CloudFormation, S3 } = require('aws-sdk');
 const {
@@ -13,16 +13,12 @@ const templates = require('./templates');
 
 class ServerlessFrontendPlugin {
   /**
-   *
+   * 
    * @param {serverless} serverless Serverless Instance
-   * @param {object} cliOptions serverless CLI options
-   * @param {object} serverlessUtils serverless utility tools like log
    */
-  constructor(serverless, cliOptions, { log, writeText }) {
+  constructor(serverless) {
     this.serverless = serverless;
     this.name = 'serverless-frontend-plugin';
-    this.log = log;
-    this.writeText = writeText;
 
     const region = this.getRegion();
     this.cfClient = new CloudFormation({ region });
@@ -37,9 +33,8 @@ class ServerlessFrontendPlugin {
   }
 
   async buildClient() {
-    this.log.info('Checking for frontend build commands...');
+    this.serverless.cli.log('Checking for frontend build commands...');
     const frontendConfig = this.getConfig();
-    this.log.debug({ frontendConfig });
     const {
       build = {},
     } = frontendConfig;
@@ -52,9 +47,7 @@ class ServerlessFrontendPlugin {
 
     const cmd = command[0];
     const options = command.splice(1, command.length -1);
-    this.log.debug(`Executing cmd: ${cmd} with options: ${options}`);
-
-    await execCmd(cmd, options, cwdDir, env, this.writeText);
+    await execCmd(cmd, options, cwdDir, env, this.serverless.cli.log);
   }
 
   async bucketExists() {
@@ -81,7 +74,7 @@ class ServerlessFrontendPlugin {
     const {
       indexDocument = 'index.html',
       errorDocument = 'index.html',
-      forbiddenDocument = 'index.html',
+      forbiddenDocument = "index.html",
     } = bucket;
 
     const {
@@ -144,6 +137,7 @@ class ServerlessFrontendPlugin {
       ],
     };
 
+    
     if (!stackExists) {
       await cfClient.createStack(cfParams).promise();
     } else {
@@ -161,7 +155,7 @@ class ServerlessFrontendPlugin {
     const frontendFiles = await readDir(distDir);
     const s3Client = this.getS3Client();
 
-    await Promise.all(frontendFiles.map((file) => {
+    await Promise.all(frontendFiles.map(file => {
       const key = file
         .replace(path.resolve(`${process.cwd()}/` + distDir), '')
         .replace(`${distDir}/`, '');
@@ -188,7 +182,7 @@ class ServerlessFrontendPlugin {
       }).promise();
     }));
 
-    this.log.debug(`frontend stack name: ${stackName} finished deploying.`);
+    this.serverless.cli.log(`frontend stack name: ${stackName} finished deploying.`);
     const outputs = await this.getStackOutputs();
     const formattedOutputsObj = outputs.reduce((prev, output) => {
       const {
@@ -200,7 +194,12 @@ class ServerlessFrontendPlugin {
     }, {});
 
     const frontendUrlsArray = formattedOutputsObj.FrontendUrls.split(',');
-    this.serverless.addServiceOutputSection('Cloudfront URLs', frontendUrlsArray);
+    /* This line doesn't seem to be working.. so the extra log on the next line is a workaround */
+    this.serverless.addServiceOutputSection('frontend url', frontendUrlsArray);
+    this.serverless.cli.log(`
+      -------- Serverless Frontend Plugin -------
+      URLs: ${JSON.stringify(frontendUrlsArray)}
+    `);
   }
 
   async deleteClient() {
@@ -209,12 +208,12 @@ class ServerlessFrontendPlugin {
     if (bucketExists) {
       const bucketName = this.getBucketName();
       const s3Client = this.getS3Client();
-      this.log.info(`Removing objects from ${bucketName}...`);
+      this.serverless.cli.log(`Removing objects from ${bucketName}...`);
 
       let existingItems = true;
       let nextMarker;
 
-      while (existingItems) {
+      while(existingItems) {
         const {
           IsTruncated,
           Contents,
@@ -239,7 +238,7 @@ class ServerlessFrontendPlugin {
     const stackName = this.getStackName();
     const stackExists = await this.stackExists();
     if (stackExists) {
-      this.log.debug(`Initiating deleteStack() for ${stackName}`);
+      this.serverless.cli.log(`Initiating deleteStack() for ${stackName}`);
       await this.cfClient.deleteStack({
         StackName: stackName,
       }).promise();
@@ -257,12 +256,12 @@ class ServerlessFrontendPlugin {
     } = offline;
     const cmd = command[0];
     const cmdOpts = command.splice(1, command.length - 1);
-    execCmd(cmd, cmdOpts, cwdDir, env, this.writeText);
+    execCmd(cmd, cmdOpts, cwdDir, env, this.serverless.cli.log);
   }
 
   getBucketName() {
     const { bucket = {} } = this.getConfig();
-    const { stage } = this.serverless.service;
+    const stage = this.serverless.service.stage;
     return bucket.name || `${this.serverless.service.service}${!!stage ? `-${stage}` : ''}-${this.getRegion()}`;
   }
 
@@ -271,16 +270,16 @@ class ServerlessFrontendPlugin {
   }
 
   /**
-   *
-   * @return {CloudFormation} CloudFormation Client
+   * 
+   * @returns {CloudFormation} CloudFormation Client
    */
   getCloudFormationClient() {
     return this.cfClient;
   }
 
   /**
-   *
-   * @return {S3} S3 Client
+   * 
+   * @returns {S3} S3 Client
    */
   getS3Client() {
     return this.s3Client;
@@ -291,8 +290,8 @@ class ServerlessFrontendPlugin {
   }
 
   getStackName() {
-    return this.serverless.service.custom[this.name].stackName ||
-    `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
+    return this.serverless.service.custom[this.name].stackName 
+      || `${this.serverless.service.service}-${this.serverless.service.provider.stage}-frontend`;
   }
 
   async getStackOutputs() {
@@ -317,24 +316,20 @@ class ServerlessFrontendPlugin {
 
   async waitForStackComplete() {
     const stackName = this.getStackName();
-    this.log.info(`Deploying frontend stack: ${stackName}`);
-
     const cfClient = this.getCloudFormationClient();
     const { Stacks: stacks } = await cfClient.describeStacks({ StackName: stackName }).promise();
     const { StackStatus: status, StackStatusReason: message } = stacks.pop();
-    this.log.debug(`${stackName} status: ${status}`);
+    this.serverless.cli.log(`${stackName} status: ${status}`);
 
     if (status.match(/(FAILED|ROLLBACK)/)) {
-      // eslint-disable-next-line max-len
-      const errMessage = `serverless-frontend-plugin stack: ${stackName} failed with a status of ${status} due to: ${message}`;
-      throw new Error(errMessage);
+      throw new Error(`serverless-frontend-plugin stack: ${stackName} failed with a status of ${status} due to: ${message}`);
     }
 
     if (status.match(/(COMPLETE)/)) {
       return null;
     }
 
-    await new Promise((res) => setTimeout(res, 3000));
+    await new Promise(res => setTimeout(res, 3000));
     return this.waitForStackComplete();
   }
 }

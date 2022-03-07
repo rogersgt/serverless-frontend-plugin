@@ -1,28 +1,19 @@
 {
-  "extends": [
-    "eslint-config-google"
-  ],
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "2020"
+  },
   "env": {
-    "node": true,
     "es6": true
   },
-  "parserOptions": {
-    "ecmaVersion": 2021,
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true
-    },
-    "sourceType": "module"
+  "globals": {
+    "require": true,
+    "module": true,
+    "process": true,
+    "console": true,
+    "setTimeout": true
   },
   "rules": {
-    "indent": ["error", 2],
-    "require-jsdoc": 0,
-    "object-curly-spacing": ["error", "always"],
-    "max-len": ["error", { "code": 124 }],
-    "semi": 0,
-    "prefer-destructuring": ["error", {
-      "object": true,
-      "array": false
-    }],
-    "prefer-promise-reject-errors": 0
+    "no-extra-boolean-cast": 0
   }
 }

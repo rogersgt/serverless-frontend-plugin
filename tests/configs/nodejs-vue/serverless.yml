@@ -19,11 +19,12 @@ useDotenv: true
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '3'
+frameworkVersion: '2'
 
 provider:
   name: aws
   runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
   httpApi:
     cors: true
 
@@ -60,7 +61,7 @@ provider:
 #    - include-me-dir/**
 plugins:
   - serverless-offline
-  - ../../../index.js
+  - serverless-frontend-plugin
   - serverless-domain-manager
 
 custom:
@@ -75,6 +76,7 @@ custom:
         - yarn
         - build
       env:
+        NODE_ENV: production
         VUE_APP_API_BASE_URL: https://${env:API_DOMAIN_NAME}
     offline:
       cwdDir: frontend
