@@ -74,9 +74,8 @@ custom:
       command:
         - yarn
         - build
-      # env:
-      #   NODE_ENV: production
-      #   VUE_APP_API_BASE_URL: https://${env:API_DOMAIN_NAME}
+      env:
+        VUE_APP_API_BASE_URL: https://${env:API_DOMAIN_NAME}
     offline:
       cwdDir: frontend
       command:
