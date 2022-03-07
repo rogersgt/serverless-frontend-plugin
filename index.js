@@ -234,8 +234,6 @@ class ServerlessFrontendPlugin {
         nextMarker = Marker;
         existingItems = !IsTruncated && !!Marker;
       }
-      // avoid the serverless remove issue: https://github.com/rogersgt/serverless-frontend-plugin/issues/2
-      await s3Client.deleteBucket({ Bucket: bucketName }).promise();
     }
 
     const stackName = this.getStackName();
