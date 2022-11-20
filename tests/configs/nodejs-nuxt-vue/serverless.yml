@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: nodejs-nuxt-vue
+service: nodejs-nuxt-vue2
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -25,6 +25,9 @@ provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
+  deploymentBucket:
+    name: ${env:DEPLOYMENT_BUCKET}
+    maxPreviousDeploymentArtifacts: 5
 
 # you can overwrite defaults here
 #  stage: dev
