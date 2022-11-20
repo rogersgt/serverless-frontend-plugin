@@ -10,6 +10,11 @@
     "plugin",
     "cloudfront"
   ],
+  "author": {
+    "name": "Grady T Rogers",
+    "email": "gradytrogers@gmail.com",
+    "url": "https://github.com/rogersgt"
+  },
   "scripts": {
     "test": "eslint ."
   },
