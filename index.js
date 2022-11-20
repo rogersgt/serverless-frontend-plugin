@@ -24,9 +24,10 @@ class ServerlessFrontendPlugin {
     this.log = log;
     this.writeText = writeText;
 
+    const awsCredentials = serverless.getProvider('aws').getCredentials();
     const region = this.getRegion();
-    this.cfClient = new CloudFormation({ region });
-    this.s3Client = new S3({ region });
+    this.cfClient = new CloudFormation({ region, ...awsCredentials });
+    this.s3Client = new S3({ region, ...awsCredentials });
 
     this.hooks = {
       'before:package:finalize': this.buildClient.bind(this),
