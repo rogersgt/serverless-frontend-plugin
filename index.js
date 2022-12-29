@@ -115,7 +115,7 @@ class ServerlessFrontendPlugin {
     } = securityHeadersConfig;
 
     /**
-     * Context Security Policy
+     * Content Security Policy
      */
     if ( contentSecurityPolicy ) {
       const {
