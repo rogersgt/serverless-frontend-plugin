@@ -60,6 +60,24 @@ custom:
   * `command`: (*string*[]) Command and options as an array of strings. For example, `["npm", "start"]` Defaults to `["echo", "no", "frontend", "offline", "command"]`.
   * `env`: (*Map*) A key/value mapping of environment variables and values to inject into the frontend start command.
   * `cwdDir`: (*string*) The directory from which to run the `offline.command`. Defaults to `./frontend` if the directory exists.
+* `securityHeadersConfig`: (*Map*) If provided, security headers will be added via Cloudfront ([AWS Security Headers Config Documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-responseheaderspolicy-securityheadersconfig.html)).  You may include the defaults shown below by providing an empty "Map" of the headers you would like to include.  For instance, if you provide an empty *Map* of "contentSecurityPolicy" below, then this plugin will include the defaults shown for "contentSecurityPolicy.contentSecurityPolicy" and "contentSecurityPolicy.override".  If you include only some of the options for a particular security header then the other options will be included with their defaults shown below automatically.  For example, if you include "strictTransportSecurity" and you provide a value to "strictTransportSecurity.accessControlMaxAgeSec" but not the other options under "strictTransportSecurity" - the plugin will assume the defaults for the missing options (includeSubdomains, override and preload will be included for the Strict-Transport-Security header that's generated and all will be set with the defaults shown below). 
+  * `contentSecurityPolicy`: (*Map*) [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy#:~:text=The%20HTTP%20Content%2DSecurity%2DPolicy,server%20origins%20and%20script%20endpoints.)
+    * `contentSecurityPolicy`: (*String*) Defaults to `"default-src 'self'"`
+    * `override`: (*Boolean*) Defaults to `true`
+  * `frameOptions`: (*Map*) [X-Frame-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
+    * `frameOption`: (*String*) Defaults to `"SAMEORIGIN"`. One of `"SAMEORIGIN"` or `"DENY"`.
+    * `override`: (*Boolean*) Defaults to `true`
+  * `contentTypeOptions`: (*Map*) [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options)
+    * `override`: (*Boolean*) Defaults to `true`
+  * `referrerPolicy`: (*Map*) [Referrer-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy)
+    * `referrerPolicy`: (*String*) Defaults to `"same-origin"`.  One of `"no-referrer"`, `"no-referrer-when-downgrade"`, `"origin"`, `"origin-when-cross-origin"`, `"same-origin"`, `"strict-origin"`, `"strict-origin-when-cross-origin"` or `"unsafe-url"`
+    * `override`: (*Boolean*) Defaults to `true`
+  * `strictTransportSecurity`: (*Map*) [Strict-Transport-Security](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
+    * `accessControlMaxAgeSec`: (*String*) Defaults to `"63072000"`
+    * `includeSubdomains`: (*Boolean*) Defaults to `true`
+    * `override`: (*Boolean*) Defaults to `true`
+    * `preload`: (*Boolean*) Defaults to `true`
+
 
 ## Offline Integration
 This plugin seamlessly integrates with [`serverless-offline`](https://www.npmjs.com/package/serverless-offline). Simply Add an `offline` configuration under `custom.serverless-frontend-plugin` in your `serverless.yml`. See `offline` options above.
