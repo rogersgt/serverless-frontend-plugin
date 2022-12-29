@@ -90,27 +90,33 @@
     },
     "ShouldIncludeSecurityHeaders": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     },
     "ShouldIncludeContentSecurity": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     },
     "ShouldIncludeStrictTransportSecurity": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     },
     "ShouldIncludeContentTypeOptions": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     },
     "ShouldIncludeFrameOptions": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     },
     "ShouldIncludeReferrerPolicy": {
       "Type": "String",
-      "AllowedValues" : ["true", "false"]
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
     }
   },
   "Conditions": {
