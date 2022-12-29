@@ -81,11 +81,11 @@ class ServerlessFrontendPlugin {
 
     const defaultParams = {
       shouldIncludeSecurityHeaders: 'true', // conditionally removes/includes security headers from cloudformation entirely
-      shouldIncludeContentSecurity: 'true', // conditionally removes/includes content security policy headers
-      shouldIncludeStrictTransportSecurity: 'true', // conditionally removes/includes strict transport security headers
-      shouldIncludeContentTypeOptions: 'true', // conditionally removes/includes content type options headers
-      shouldIncludeFrameOptions: 'true', // conditionally removes/includes frame options headers
-      shouldIncludeReferrerPolicy: 'true', // conditionally removes/includes referrer policy headers
+      shouldIncludeContentSecurity: 'true', // conditionally removes/includes Content-Security-Policy header
+      shouldIncludeStrictTransportSecurity: 'true', // conditionally removes/includes Strict-Transport-Security header
+      shouldIncludeContentTypeOptions: 'true', // conditionally removes/includes X-Content-Type-Options header
+      shouldIncludeFrameOptions: 'true', // conditionally removes/includes X-Frame-Options header
+      shouldIncludeReferrerPolicy: 'true', // conditionally removes/includes Referrer-Policy header
       contentSecurityPolicy: `default-src 'self'`,
       contentSecurityPolicyOverride: 'true',
       strictTransportSecurityMaxAge: '63072000',
@@ -124,7 +124,9 @@ class ServerlessFrontendPlugin {
       } = contentSecurityPolicy;
 
       if (userContentSecurityPolicy) defaultParams.contentSecurityPolicy = userContentSecurityPolicy;
-      if ( contentSecurityPolicyOverride === false ) defaultParams.contentSecurityPolicyOverride = contentSecurityPolicyOverride + '';
+      if ( contentSecurityPolicyOverride === false ) {
+        defaultParams.contentSecurityPolicyOverride = contentSecurityPolicyOverride + '';
+      }
     } else {
       if ( contentSecurityPolicy !== null ) {
         defaultParams.shouldIncludeContentSecurity = 'false';
@@ -193,7 +195,9 @@ class ServerlessFrontendPlugin {
 
       if (accessControlMaxAgeSec) defaultParams.strictTransportSecurityMaxAge = accessControlMaxAgeSec;
       if (includeSubdomains === false) defaultParams.strictTransportSecurityIncludeSubdomains = includeSubdomains + '';
-      if (strictTransportSecurityOverride === false) defaultParams.strictTransportSecurityOverride = strictTransportSecurityOverride + '';
+      if (strictTransportSecurityOverride === false) {
+        defaultParams.strictTransportSecurityOverride = strictTransportSecurityOverride + '';
+      }
       if (preload === false) defaultParams.strictTransportSecurityPreload = preload + '';
     } else {
       if ( strictTransportSecurity !== null ) {
@@ -243,15 +247,8 @@ class ServerlessFrontendPlugin {
     const cfClient = this.getCloudFormationClient();
     const bucketName = this.getBucketName();
     const securityHeaderParams = this.generateSecurityHeaderParams();
-
-    console.log('_____________________________________________\n\n');
-
-    console.log(securityHeaderParams);
-
-    console.log('_____________________________________________\n\n');
-
-
     const stackExists = await this.stackExists();
+
     const cfParams = {
       StackName: stackName,
       TemplateBody: JSON.stringify(templates[mode]),
