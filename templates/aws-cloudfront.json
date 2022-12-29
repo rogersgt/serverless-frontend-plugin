@@ -34,9 +34,85 @@
     },
     "ForbiddenDocument": {
       "Type": "String"
+    },
+    "ContentSecurityPolicy": {
+      "Type": "String",
+      "Default": "default-src 'self'"
+    },
+    "ContentSecurityPolicyOverride": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "StrictTransportSecurityMaxAge": {
+      "Type": "Number",
+      "MinValue": 5,
+      "Default": "63072000"
+    },
+    "StrictTransportSecurityIncludeSubdomains": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "StrictTransportSecurityOverride": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "StrictTransportSecurityPreload": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "ContentTypeOptionsOverride": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "FrameOption": {
+      "Type": "String",
+      "AllowedValues" : ["DENY", "SAMEORIGIN"],
+      "Default": "SAMEORIGIN"
+    },
+    "FrameOptionOverride": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "ReferrerPolicy": {
+      "Type": "String",
+      "Default": "same-origin"
+    },
+    "ReferrerPolicyOverride": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"],
+      "Default": "false"
+    },
+    "ShouldIncludeSecurityHeaders": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
+    },
+    "ShouldIncludeContentSecurity": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
+    },
+    "ShouldIncludeStrictTransportSecurity": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
+    },
+    "ShouldIncludeContentTypeOptions": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
+    },
+    "ShouldIncludeFrameOptions": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
+    },
+    "ShouldIncludeReferrerPolicy": {
+      "Type": "String",
+      "AllowedValues" : ["true", "false"]
     }
   },
-
   "Conditions": {
     "CreateAltDnsName": {
       "Fn::Not": [
@@ -46,6 +122,54 @@
             ""
           ]
         }
+      ]
+    },
+    "CreateSecurityHeaders": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeSecurityHeaders"
+        },
+        "true"
+      ]
+    },
+    "IncludeContentSecurity": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeContentSecurity"
+        },
+        "true"
+      ]
+    },
+    "IncludeStrictTransportSecurity": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeStrictTransportSecurity"
+        },
+        "true"
+      ]
+    },
+    "IncludeContentTypeOptions": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeContentTypeOptions"
+        },
+        "true"
+      ]
+    },
+    "IncludeFrameOptions": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeFrameOptions"
+        },
+        "true"
+      ]
+    },
+    "IncludeReferrerPolicy": {
+      "Fn::Equals": [
+        {
+            "Ref": "ShouldIncludeReferrerPolicy"
+        },
+        "true"
       ]
     },
     "UseStage": {
@@ -71,7 +195,6 @@
       ]
     }
   },
-
   "Resources": {
     "FrontendBucket": {
       "Type": "AWS::S3::Bucket",
@@ -106,6 +229,103 @@
               }
             }
           ]
+        }
+      }
+    },
+    "ResponseHeadersPolicy": {
+      "Type" : "AWS::CloudFront::ResponseHeadersPolicy",
+      "Condition": "CreateSecurityHeaders",
+      "Properties" : {
+        "ResponseHeadersPolicyConfig": {
+          "Name": {
+            "Fn::Sub": [
+              "${ServiceName}-${Stage}-ResponseHeadersPolicy",
+              {
+                "ServiceName": {
+                  "Ref": "ServiceName"
+                },
+                "Stage": {
+                  "Ref": "Stage"
+                }
+              }
+              
+            ]
+          }, 
+          "SecurityHeadersConfig" : {
+            "ContentSecurityPolicy": {
+              "Fn::If" : [
+                "IncludeContentSecurity",
+                {
+                  "ContentSecurityPolicy": {
+                    "Ref": "ContentSecurityPolicy"
+                  },
+                  "Override": {
+                    "Ref": "ContentSecurityPolicyOverride"
+                  }
+                },
+                {"Ref" : "AWS::NoValue"}
+              ]
+            },
+            "StrictTransportSecurity": {
+              "Fn::If" : [
+                "IncludeStrictTransportSecurity",
+                {
+                  "AccessControlMaxAgeSec": {
+                    "Ref": "StrictTransportSecurityMaxAge"
+                  },
+                  "IncludeSubdomains": {
+                    "Ref": "StrictTransportSecurityIncludeSubdomains"
+                  },
+                  "Override": {
+                    "Ref": "StrictTransportSecurityOverride"
+                  },
+                  "Preload": {
+                    "Ref": "StrictTransportSecurityPreload"
+                  }
+                },
+                {"Ref" : "AWS::NoValue"}
+              ]
+            },
+            "ContentTypeOptions": {
+              "Fn::If" : [
+                "IncludeContentTypeOptions",
+                {
+                  "Override": {
+                    "Ref": "ContentTypeOptionsOverride"
+                  }
+                },
+                {"Ref" : "AWS::NoValue"}
+              ]
+            },
+            "FrameOptions": {
+              "Fn::If" : [
+                "IncludeFrameOptions",
+                {
+                  "FrameOption": {
+                    "Ref": "FrameOption"
+                  },
+                  "Override": {
+                    "Ref": "FrameOptionOverride"
+                  }
+                },
+                {"Ref" : "AWS::NoValue"}
+              ]
+            },
+            "ReferrerPolicy": {
+              "Fn::If" : [
+                "IncludeReferrerPolicy",
+                {
+                  "ReferrerPolicy": {
+                    "Ref": "ReferrerPolicy"
+                  },
+                  "Override": {
+                    "Ref": "ReferrerPolicyOverride"
+                  }
+                },
+                {"Ref" : "AWS::NoValue"}
+              ]
+            }
+          }
         }
       }
     },
@@ -185,7 +405,14 @@
                 "QueryString" : false,
                 "Cookies" : { "Forward" : "none" }
               },
-              "ViewerProtocolPolicy" : "redirect-to-https"
+              "ViewerProtocolPolicy" : "redirect-to-https",
+              "ResponseHeadersPolicyId" : {
+                "Fn::If" : [
+                  "CreateSecurityHeaders",
+                  {"Ref": "ResponseHeadersPolicy"},
+                  {"Ref" : "AWS::NoValue"}
+                ]
+              }
             }
           },
           "Tags" : [
