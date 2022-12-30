@@ -101,7 +101,7 @@ class ServerlessFrontendPlugin {
 
     if (!securityHeadersConfig) {
       return [{
-        ParameterKey: ShouldIncludeSecurityHeaders,
+        ParameterKey: 'ShouldIncludeSecurityHeaders',
         ParameterValue: 'false',
       }];
     }
