@@ -16,8 +16,9 @@
     "url": "https://github.com/rogersgt"
   },
   "scripts": {
-    "test": "eslint .",
-    "testScripts": "mocha"
+    "lint": "eslint .",
+    "test:unit": "mocha tests/unit/*.spec.js",
+    "test": "npm run lint && npm run test:unit"
   },
   "devDependencies": {
     "aws-sdk": "2.1039.0",

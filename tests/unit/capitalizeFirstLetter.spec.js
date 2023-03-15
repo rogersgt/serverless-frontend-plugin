@@ -1,4 +1,4 @@
-const { capitalizeFirstLetter } = require('../lib/capitalizeFirstLetter');
+const { capitalizeFirstLetter } = require('../../lib/capitalizeFirstLetter');
 const { expect } = require('chai');
 
 
