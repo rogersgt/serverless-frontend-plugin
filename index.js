@@ -8,8 +8,10 @@ const { CloudFormation, S3 } = require('aws-sdk');
 const {
   execCmd,
 } = require('./lib/child_process');
+const { capitalizeFirstLetter } = require('./lib/capitalizeFirstLetter');
 
 const templates = require('./templates');
+
 
 class ServerlessFrontendPlugin {
   /**
@@ -70,6 +72,154 @@ class ServerlessFrontendPlugin {
     }
   }
 
+  generateSecurityHeaderParams() {
+    const frontendConfig = this.getConfig();
+    const params = [];
+    const {
+      securityHeadersConfig = null,
+    } = frontendConfig;
+
+    const defaultParams = {
+      shouldIncludeSecurityHeaders: 'true', // conditionally removes/includes security headers from cloudformation entirely
+      shouldIncludeContentSecurity: 'true', // conditionally removes/includes Content-Security-Policy header
+      shouldIncludeStrictTransportSecurity: 'true', // conditionally removes/includes Strict-Transport-Security header
+      shouldIncludeContentTypeOptions: 'true', // conditionally removes/includes X-Content-Type-Options header
+      shouldIncludeFrameOptions: 'true', // conditionally removes/includes X-Frame-Options header
+      shouldIncludeReferrerPolicy: 'true', // conditionally removes/includes Referrer-Policy header
+      contentSecurityPolicy: `default-src 'self'`,
+      contentSecurityPolicyOverride: 'true',
+      strictTransportSecurityMaxAge: '63072000',
+      strictTransportSecurityIncludeSubdomains: 'true',
+      strictTransportSecurityOverride: 'true',
+      strictTransportSecurityPreload: 'true',
+      contentTypeOptionsOverride: 'true',
+      frameOption: 'SAMEORIGIN',
+      frameOptionOverride: 'true',
+      referrerPolicy: 'same-origin',
+      referrerPolicyOverride: 'true',
+    };
+
+    if (!securityHeadersConfig) {
+      return [{
+        ParameterKey: 'ShouldIncludeSecurityHeaders',
+        ParameterValue: 'false',
+      }];
+    }
+
+    const {
+      contentSecurityPolicy,
+      contentTypeOptions,
+      frameOptions,
+      referrerPolicy,
+      strictTransportSecurity,
+    } = securityHeadersConfig;
+
+    /**
+     * Content Security Policy
+     */
+    if ( contentSecurityPolicy ) {
+      const {
+        contentSecurityPolicy: userContentSecurityPolicy,
+        override: contentSecurityPolicyOverride,
+      } = contentSecurityPolicy;
+
+      if (userContentSecurityPolicy) defaultParams.contentSecurityPolicy = userContentSecurityPolicy;
+      if ( contentSecurityPolicyOverride === false ) {
+        defaultParams.contentSecurityPolicyOverride = contentSecurityPolicyOverride + '';
+      }
+    } else {
+      if ( contentSecurityPolicy !== null ) {
+        defaultParams.shouldIncludeContentSecurity = 'false';
+      }
+    }
+
+    /**
+     * Context Type Options
+     */
+    if ( contentTypeOptions ) {
+      const {
+        override: contentTypeOptionsOverride,
+      } = contentTypeOptions;
+
+      if (contentTypeOptionsOverride === false) defaultParams.contentTypeOptionsOverride = contentTypeOptionsOverride + '';
+    } else {
+      if ( contentTypeOptions !== null ) {
+        defaultParams.shouldIncludeContentTypeOptions = 'false';
+      }
+    }
+
+    /**
+     * Frame Options
+     */
+    if (frameOptions) {
+      const {
+        frameOption,
+        override: frameOptionOverride,
+      } = frameOptions;
+
+      if (frameOption) defaultParams.frameOption = frameOption;
+      if (frameOptionOverride === false) defaultParams.frameOptionOverride = frameOptionOverride + '';
+    } else {
+      if (frameOptions !== null) {
+        defaultParams.shouldIncludeFrameOptions = 'false';
+      }
+    }
+
+    /**
+     * Referrer Policy
+     */
+    if (referrerPolicy) {
+      const {
+        referrerPolicy: userReferrerPolicy,
+        override: referrerPolicyOverride,
+      } = referrerPolicy;
+
+      if (userReferrerPolicy) defaultParams.referrerPolicy = userReferrerPolicy;
+      if (referrerPolicyOverride === false) defaultParams.referrerPolicyOverride = referrerPolicyOverride + '';
+    } else {
+      if ( referrerPolicy !== null ) {
+        defaultParams.shouldIncludeReferrerPolicy = 'false';
+      }
+    }
+
+    /**
+     * Strict Transport Security
+     */
+    if (strictTransportSecurity) {
+      const {
+        accessControlMaxAgeSec,
+        includeSubdomains,
+        override: strictTransportSecurityOverride,
+        preload,
+      } = strictTransportSecurity;
+
+      if (accessControlMaxAgeSec) defaultParams.strictTransportSecurityMaxAge = accessControlMaxAgeSec;
+      if (includeSubdomains === false) defaultParams.strictTransportSecurityIncludeSubdomains = includeSubdomains + '';
+      if (strictTransportSecurityOverride === false) {
+        defaultParams.strictTransportSecurityOverride = strictTransportSecurityOverride + '';
+      }
+      if (preload === false) defaultParams.strictTransportSecurityPreload = preload + '';
+    } else {
+      if ( strictTransportSecurity !== null ) {
+        defaultParams.shouldIncludeStrictTransportSecurity = 'false';
+      }
+    }
+
+    // defaultParams length = 1 implies a user has not included any security headers
+    if (Object.keys(defaultParams).length === 1) {
+      defaultParams.shouldIncludeSecurityHeaders = 'false';
+    }
+
+    Object.keys(defaultParams).forEach((key, index)=>{
+      params.push({
+        ParameterKey: capitalizeFirstLetter(key),
+        ParameterValue: defaultParams[key],
+      });
+    });
+
+    return params;
+  }
+
   async deployClient() {
     const frontendConfig = this.getConfig();
     const {
@@ -96,8 +246,9 @@ class ServerlessFrontendPlugin {
     const stackName = this.getStackName();
     const cfClient = this.getCloudFormationClient();
     const bucketName = this.getBucketName();
-
+    const securityHeaderParams = this.generateSecurityHeaderParams();
     const stackExists = await this.stackExists();
+
     const cfParams = {
       StackName: stackName,
       TemplateBody: JSON.stringify(templates[mode]),
@@ -142,6 +293,7 @@ class ServerlessFrontendPlugin {
           ParameterKey: 'HostedZoneName',
           ParameterValue: hostedZoneName || dnsName,
         },
+        ...securityHeaderParams,
       ],
     };
 
