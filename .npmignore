@@ -6,3 +6,4 @@ node_modules
 .vscode
 .gitignore
 .eslintrc
+.circleci
